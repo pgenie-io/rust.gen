@@ -20,3 +20,5 @@
 
 # Ignore noise:
 .DS_Store
+/demo-output/target/
+/demo-output/Cargo.lock
