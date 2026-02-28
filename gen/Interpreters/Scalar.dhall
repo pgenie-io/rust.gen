@@ -30,7 +30,8 @@ let run =
                 Sdk.Compiled.ok
                   Output
                   { sig =
-                      "crate::types::${Deps.CodegenKit.Name.toTextInPascal name}"
+                      "crate::types::"
+                      ++ Deps.CodegenKit.Name.toTextInPascal name
                   }
           }
           input
