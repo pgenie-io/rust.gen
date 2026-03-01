@@ -16,11 +16,7 @@ let MemberModule = ./Member.dhall
 
 let Input = Deps.Sdk.Project.Query
 
-let Output =
-      { moduleName : Text
-      , modulePath : Text
-      , moduleContents : Text
-      }
+let Output = { moduleName : Text, modulePath : Text, moduleContents : Text }
 
 let render =
       \(config : Algebra.Config) ->
@@ -40,9 +36,7 @@ let render =
               Deps.Prelude.Text.concatMapSep
                 ", "
                 MemberModule.Output
-                ( \(member : MemberModule.Output) ->
-                    member.toSqlRef
-                )
+                (\(member : MemberModule.Output) -> member.toSqlRef)
                 params
 
         let queryBody = result.queryBody paramRefsExp

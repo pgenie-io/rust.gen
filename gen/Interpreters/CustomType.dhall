@@ -12,11 +12,7 @@ let MemberGen = ./Member.dhall
 
 let Input = Model.CustomType
 
-let Output =
-      { moduleName : Text
-      , modulePath : Text
-      , moduleContent : Text
-      }
+let Output = { moduleName : Text, modulePath : Text, moduleContent : Text }
 
 in  Algebra.module
       Input

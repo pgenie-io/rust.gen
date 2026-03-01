@@ -5,7 +5,8 @@
 //! SELECT 
 //!     ar.id,
 //!     ar.name,
-//!     COUNT(t.id) as track_count
+//!     COUNT(DISTINCT t.id) as track_count,
+//!     COUNT(DISTINCT a.id) as album_count
 //! FROM artists ar
 //! LEFT JOIN albums a ON ar.id = a.artist_id
 //! LEFT JOIN tracks t ON a.id = t.album_id
@@ -28,7 +29,9 @@ pub struct GetArtistsWithTrackCountResultRow {
     /// Maps to `name`.
     pub name: String,
     /// Maps to `track_count`.
-    pub track_count: i64,
+    pub track_count: i32,
+    /// Maps to `album_count`.
+    pub album_count: i32,
 }
 
 impl From<tokio_postgres::Row> for GetArtistsWithTrackCountResultRow {
@@ -37,12 +40,13 @@ impl From<tokio_postgres::Row> for GetArtistsWithTrackCountResultRow {
             id: row.get("id"),
             name: row.get("name"),
             track_count: row.get("track_count"),
+            album_count: row.get("album_count"),
         }
     }
 }
 
 /// SQL query string.
-pub const SQL: &str = "SELECT \n    ar.id,\n    ar.name,\n    COUNT(t.id) as track_count\nFROM artists ar\nLEFT JOIN albums a ON ar.id = a.artist_id\nLEFT JOIN tracks t ON a.id = t.album_id\nGROUP BY ar.id, ar.name\nORDER BY track_count DESC";
+pub const SQL: &str = "SELECT \n    ar.id,\n    ar.name,\n    COUNT(DISTINCT t.id) as track_count,\n    COUNT(DISTINCT a.id) as album_count\nFROM artists ar\nLEFT JOIN albums a ON ar.id = a.artist_id\nLEFT JOIN tracks t ON a.id = t.album_id\nGROUP BY ar.id, ar.name\nORDER BY track_count DESC";
 
 /// Execute the `get_artists_with_track_count` query.
 pub async fn query(

@@ -24,7 +24,7 @@ let run =
           Value.Output
           Output
           ( \(value : Value.Output) ->
-              let fieldName = Deps.CodegenKit.Name.toTextInSnake input.name
+              let fieldName = input.pgName
 
               let sig = value.sig
 
@@ -35,9 +35,7 @@ let run =
                     { fieldName
                     , fieldType = sig
                     , fieldDeclaration =
-                        ''
-                            /// Maps to `${input.pgName}`.
-                            pub ${fieldName}: ${sig},''
+                        "    /// Maps to `${input.pgName}`.\n    pub ${fieldName}: ${sig},"
                     , toSqlRef =
                         "&params.${fieldName} as &(dyn postgres_types::ToSql + Sync)"
                     }

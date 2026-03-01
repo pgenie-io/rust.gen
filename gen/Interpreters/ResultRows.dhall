@@ -44,7 +44,9 @@ let run =
                               Deps.Prelude.Text.concatMap
                                 Member.Output
                                 ( \(column : Member.Output) ->
-                                    "            ${column.fieldName}: row.get(\"${column.fieldName}\"),\n"
+                                    ''
+                                                ${column.fieldName}: row.get("${column.fieldName}"),
+                                    ''
                                 )
                                 columns
 

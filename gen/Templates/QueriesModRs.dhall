@@ -10,7 +10,9 @@ let run =
         ${Deps.Prelude.Text.concatMap
             Text
             ( \(modName : Text) ->
-                "pub mod ${modName};\n"
+                ''
+                pub mod ${modName};
+                ''
             )
             input.modules}''
 

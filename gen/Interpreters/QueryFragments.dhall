@@ -58,6 +58,8 @@ let run =
       \(input : Input) ->
         Compiled.ok
           Output
-          { exp = renderExp input, docComment = renderDocComment input }
+          { exp = renderExp input
+          , docComment = Prelude.Text.replace "\n" "\n//! " (renderDocComment input)
+          }
 
 in  Algebra.module Input Output run

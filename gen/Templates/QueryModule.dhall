@@ -18,22 +18,23 @@ let run =
         let paramsDecl =
               if    Deps.Prelude.List.null Text input.paramFields
               then  ""
-              else
-                ''
+              else  ''
 
-                /// Parameters for the `${input.moduleName}` query.
-                #[derive(Debug, Clone)]
-                pub struct ${input.structName}Params {
-                ${Deps.Prelude.Text.concatMap
-                    Text
-                    (\(field : Text) -> field ++ "\n")
-                    input.paramFields}}
-                ''
+                    /// Parameters for the `${input.moduleName}` query.
+                    #[derive(Debug, Clone)]
+                    pub struct ${input.structName}Params {
+                    ${Deps.Prelude.Text.concatMap
+                        Text
+                        (\(field : Text) -> field ++ "\n")
+                        input.paramFields}}
+                    ''
 
         let fnParams =
               if    Deps.Prelude.List.null Text input.paramFields
               then  ""
-              else  "\n    params: &${input.structName}Params,"
+              else  ''
+
+                    ${"    "}params: &${input.structName}Params,''
 
         in  ''
             //! Query module for `${input.moduleName}`.

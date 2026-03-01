@@ -21,8 +21,7 @@ let combineOutputs =
       \(input : Input) ->
       \(queries : List QueryGen.Output) ->
       \(customTypes : List CustomTypeGen.Output) ->
-        let packageName =
-              Deps.CodegenKit.Name.concat input.space [ input.name ]
+        let packageName = Deps.CodegenKit.Name.concat input.space [ input.name ]
 
         let packageName = Deps.CodegenKit.Name.toTextInKebab packageName
 
@@ -44,9 +43,7 @@ let combineOutputs =
                 QueryGen.Output
                 Sdk.File.Type
                 ( \(query : QueryGen.Output) ->
-                    { path = query.modulePath
-                    , content = query.moduleContents
-                    }
+                    { path = query.modulePath, content = query.moduleContents }
                 )
                 queries
 
@@ -60,10 +57,7 @@ let combineOutputs =
                     }
               }
 
-        let libRs =
-              { path = "src/lib.rs"
-              , content = Templates.LibRs.run {=}
-              }
+        let libRs = { path = "src/lib.rs", content = Templates.LibRs.run {=} }
 
         let typesModRs
             : Sdk.File.Type
@@ -90,18 +84,12 @@ let combineOutputs =
                         Deps.Prelude.List.map
                           QueryGen.Output
                           Text
-                          ( \(query : QueryGen.Output) ->
-                              query.moduleName
-                          )
+                          (\(query : QueryGen.Output) -> query.moduleName)
                           queries
                     }
               }
 
-        in      [ cargoToml
-                , libRs
-                , typesModRs
-                , queriesModRs
-                ]
+        in      [ cargoToml, libRs, typesModRs, queriesModRs ]
               # customTypeFiles
               # queryFiles
             : List Sdk.File.Type

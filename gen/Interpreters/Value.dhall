@@ -31,9 +31,7 @@ let run =
                           then  "Option<${scalar.sig}>"
                           else  scalar.sig
 
-                    in  Sdk.Compiled.ok
-                          Output
-                          { sig = "Vec<${elementSig}>" }
+                    in  Sdk.Compiled.ok Output { sig = "Vec<${elementSig}>" }
                 )
                 (Sdk.Compiled.ok Output { sig = scalar.sig })
           )

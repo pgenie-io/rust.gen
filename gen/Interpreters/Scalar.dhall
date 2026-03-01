@@ -21,17 +21,15 @@ let run =
                 Sdk.Compiled.map
                   Primitive.Output
                   Output
-                  ( \(primitive : Primitive.Output) ->
-                      { sig = primitive.sig }
-                  )
+                  (\(primitive : Primitive.Output) -> { sig = primitive.sig })
                   (Primitive.run config primitive)
           , Custom =
               \(name : Model.Name) ->
                 Sdk.Compiled.ok
                   Output
                   { sig =
-                      "crate::types::"
-                      ++ Deps.CodegenKit.Name.toTextInPascal name
+                          "crate::types::"
+                      ++  Deps.CodegenKit.Name.toTextInPascal name
                   }
           }
           input

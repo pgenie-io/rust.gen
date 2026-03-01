@@ -1,10 +1,6 @@
 let Deps = ../Deps/package.dhall
 
-let Input =
-      { packageName : Text
-      , version : Text
-      , dbName : Text
-      }
+let Input = { packageName : Text, version : Text, dbName : Text }
 
 let run =
       \(input : Input) ->
