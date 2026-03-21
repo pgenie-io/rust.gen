@@ -1,0 +1,2 @@
+https://raw.githubusercontent.com/pgenie-io/gen-sdk/2eda5fa124672594d5e305944d099e74dfe85ab4/dhall/package.dhall
+  sha256:750b4f39ef1c16ad15700dad8c97b624da6ae04de0797fe48b38eff93b0d3f78
