@@ -12,7 +12,7 @@ let Input = Deps.Sdk.Project.QueryFragments
 
 let Output
     : Type
-    = { sqlExp : Text, docComment : Text }
+    = { mkSqlExp : List Text -> Text, docComment : Text }
 
 let escapeRustString
     : Text -> Text
@@ -24,8 +24,9 @@ let escapeRustString
         ]
 
 let renderSqlExp
-    : Deps.Sdk.Project.QueryFragments -> Text
+    : Deps.Sdk.Project.QueryFragments -> List Text -> Text
     = \(fragments : Deps.Sdk.Project.QueryFragments) ->
+      \(castSuffixes : List Text) ->
             "\""
         ++  Prelude.Text.concatMap
               Deps.Sdk.Project.QueryFragment
@@ -34,7 +35,17 @@ let renderSqlExp
                     { Sql = escapeRustString
                     , Var =
                         \(var : Deps.Sdk.Project.Var) ->
-                          "\$" ++ Deps.Prelude.Natural.show (var.paramIndex + 1)
+                          let suffix =
+                                Prelude.Optional.fold
+                                  Text
+                                  (Prelude.List.index var.paramIndex Text castSuffixes)
+                                  Text
+                                  (\(s : Text) -> s)
+                                  ""
+
+                          in  "\$"
+                              ++  Deps.Prelude.Natural.show (var.paramIndex + 1)
+                              ++  suffix
                     }
                     queryFragment
               )
@@ -58,6 +69,6 @@ let run =
       \(input : Input) ->
         Compiled.ok
           Output
-          { sqlExp = renderSqlExp input, docComment = renderDocComment input }
+          { mkSqlExp = renderSqlExp input, docComment = renderDocComment input }
 
 in  Algebra.module Input Output run

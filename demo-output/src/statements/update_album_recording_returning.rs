@@ -53,7 +53,7 @@ impl crate::mapping::Statement for Input {
 
     const SQL: &str = "-- Update album recording information\n\
 update album\n\
-set recording = $1\n\
+set recording = $1::public.recording_info\n\
 where id = $2\n\
 returning *";
 

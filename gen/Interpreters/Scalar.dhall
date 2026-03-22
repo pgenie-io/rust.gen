@@ -34,7 +34,7 @@ let run =
                       { sig =
                           "crate::types::${Deps.CodegenKit.Name.toTextInPascal name}"
                       , pgType = "Type::UNKNOWN"
-                      , pgCastSuffix = "::${pgName}"
+                      , pgCastSuffix = "::public.${pgName}"
                       }
           }
           input

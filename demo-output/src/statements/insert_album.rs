@@ -42,7 +42,7 @@ impl crate::mapping::Statement for Input {
     const RETURNS_ROWS: bool = true;
 
     const SQL: &str = "insert into album (name, released, format, recording)\n\
-values ($1, $2, $3, $4)\n\
+values ($1, $2, $3::public.album_format, $4::public.recording_info)\n\
 returning id";
 
     const PARAM_TYPES: &'static [tokio_postgres::types::Type] = &[Type::TEXT, Type::DATE, Type::UNKNOWN, Type::UNKNOWN];

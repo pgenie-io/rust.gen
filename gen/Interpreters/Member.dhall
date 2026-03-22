@@ -20,6 +20,7 @@ let Output =
       , paramExpr : Text
       , decoderExpr : Text
       , pgType : Text
+      , pgCastSuffix : Text
       }
 
 let run =
@@ -89,6 +90,7 @@ let run =
                     , paramExpr
                     , decoderExpr
                     , pgType = value.pgType
+                    , pgCastSuffix = value.pgCastSuffix
                     }
           )
           ( Sdk.Compiled.nest

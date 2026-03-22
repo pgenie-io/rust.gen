@@ -55,7 +55,7 @@ impl crate::mapping::Statement for Input {
   format,\n\
   recording\n\
 from album\n\
-where format = $1";
+where format = $1::public.album_format";
 
     const PARAM_TYPES: &'static [tokio_postgres::types::Type] = &[Type::UNKNOWN];
 

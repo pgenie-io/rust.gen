@@ -54,7 +54,14 @@ let render =
                 (\(member : MemberModule.Output) -> member.pgType)
                 params
 
-        let result = result { sqlExp = fragments.sqlExp, paramTypes = paramTypesText, paramExprs } typeName
+        let paramCastSuffixes =
+              Deps.Prelude.List.map
+                MemberModule.Output
+                Text
+                (\(member : MemberModule.Output) -> member.pgCastSuffix)
+                params
+
+        let result = result { sqlExp = fragments.mkSqlExp paramCastSuffixes, paramTypes = paramTypesText, paramExprs } typeName
 
         let paramFields =
               Deps.Prelude.Text.concatMapSep
