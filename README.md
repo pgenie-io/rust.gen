@@ -51,7 +51,8 @@ elements.
 | `bpchar` / `char(n)`| `String`                          | std               | —                                 |
 | `name`              | `String`                          | std               | —                                 |
 | `citext`            | `String`                          | std               | —                                 |
-| `inet`              | `std::net::IpAddr`                | std               | —                                 |
+| `cidr`              | `cidr::IpCidr`                    | `cidr` 0.3        | `with-cidr-0_3`                   |
+| `inet`              | `cidr::IpInet`                    | `cidr` 0.3        | `with-cidr-0_3`                   |
 | `hstore`            | `HashMap<String, Option<String>>` | std               | —                                 |
 | `date`              | `chrono::NaiveDate`               | `chrono` 0.4      | `with-chrono-0_4`                 |
 | `time`              | `chrono::NaiveTime`               | `chrono` 0.4      | `with-chrono-0_4`                 |
@@ -76,7 +77,6 @@ produce warnings and be skipped during generation.
 
 | PostgreSQL Type     | Reason                                                                 |
 |---------------------|------------------------------------------------------------------------|
-| `cidr`              | No `ToSql`/`FromSql` impl in `postgres-types`                         |
 | `circle`            | No `ToSql`/`FromSql` impl in `postgres-types`                         |
 | `datemultirange`    | Multirange types not supported by `postgres-types`                     |
 | `daterange`         | Range types not supported by `postgres-types`                          |

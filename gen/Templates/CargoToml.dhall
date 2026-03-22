@@ -25,8 +25,10 @@ in  Algebra.module
           postgres-types = { version = "0.2", features = [
               "derive",
               "with-chrono-0_4",
+              "with-cidr-0_3",
               "with-uuid-1",
           ] }
+          cidr = "0.3"
           chrono = { version = "0.4", default-features = false, features = ["std"] }
 
           [dev-dependencies]
