@@ -1,2 +1,2 @@
-https://raw.githubusercontent.com/pgenie-io/gen-sdk/v0.1.0/dhall/Prelude.dhall
-  sha256:07fdd4afe5e91c6cad07a4f63d14b0dab03d72d8e7e87e9ac9030f5e18b6e5b3
+https://raw.githubusercontent.com/dhall-lang/dhall-lang/v23.1.0/Prelude/package.dhall
+  sha256:931cbfae9d746c4611b07633ab1e547637ab4ba138b16bf65ef1b9ad66a60b7f

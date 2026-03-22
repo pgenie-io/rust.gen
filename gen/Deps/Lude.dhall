@@ -1,2 +1,2 @@
-https://raw.githubusercontent.com/pgenie-io/gen-sdk/v0.1.0/dhall/Lude.dhall
-  sha256:2ebbf1dfe0a8e7c7e08f40a82af2a1152a16c48dcec1c37c0de4f7fea2d06ba7
+https://raw.githubusercontent.com/codemine-io/lude.dhall/v0.2.0/package.dhall
+  sha256:0ff6332b9f223a1308ae8e6ded71209fdbca16f70cc3bfffc741ac65b1319aac
