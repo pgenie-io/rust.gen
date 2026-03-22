@@ -8,18 +8,18 @@ let Params =
       , srcPath : Text
       , sqlDocLines : Text
       , sqlExp : Text
+      , hasParams : Bool
       , paramFields : Text
       , paramExprs : Text
       , typeDecls : Text
-      , decodeBody : Text
-      , decoderBlock : Text
+      , statementImpl : Text
       }
 
 in  Algebra.module
       Params
       ( \(params : Params) ->
           let paramsSection =
-                if    Deps.Prelude.Text.null params.paramFields
+                if    params.hasParams == False
                 then  ''
                       /// Parameters for the `${params.queryName}` query.
                       ///
@@ -61,84 +61,6 @@ in  Algebra.module
                       }
                       ''
 
-          let decodeImpl =
-                merge
-                  { rows_affected =
-                      ''
-                      impl crate::Statement for Input {
-                          type Output = Output;
-
-                          fn sql() -> &'static str {
-                              SQL
-                          }
-
-                          fn params(&self) -> Vec<&(dyn postgres_types::ToSql + Sync)> {
-                              self.params()
-                          }
-
-                          fn decode(_rows: Vec<tokio_postgres::Row>, rows_affected: u64) -> Self::Output {
-                              rows_affected
-                          }
-                      }
-                      ''
-                  , optional =
-                      ''
-                      impl crate::Statement for Input {
-                          type Output = Output;
-
-                          fn sql() -> &'static str {
-                              SQL
-                          }
-
-                          fn params(&self) -> Vec<&(dyn postgres_types::ToSql + Sync)> {
-                              self.params()
-                          }
-
-                          fn decode(rows: Vec<tokio_postgres::Row>, _rows_affected: u64) -> Self::Output {
-                              rows.into_iter().next().map(|row| OutputRow::from_row(&row))
-                          }
-                      }
-                      ''
-                  , single =
-                      ''
-                      impl crate::Statement for Input {
-                          type Output = Output;
-
-                          fn sql() -> &'static str {
-                              SQL
-                          }
-
-                          fn params(&self) -> Vec<&(dyn postgres_types::ToSql + Sync)> {
-                              self.params()
-                          }
-
-                          fn decode(rows: Vec<tokio_postgres::Row>, _rows_affected: u64) -> Self::Output {
-                              let row = rows.into_iter().next().expect("expected exactly one row");
-                              OutputRow::from_row(&row)
-                          }
-                      }
-                      ''
-                  , multiple =
-                      ''
-                      impl crate::Statement for Input {
-                          type Output = Output;
-
-                          fn sql() -> &'static str {
-                              SQL
-                          }
-
-                          fn params(&self) -> Vec<&(dyn postgres_types::ToSql + Sync)> {
-                              self.params()
-                          }
-
-                          fn decode(rows: Vec<tokio_postgres::Row>, _rows_affected: u64) -> Self::Output {
-                              rows.iter().map(|row| OutputRow::from_row(row)).collect()
-                          }
-                      }
-                      ''
-                  }
-                  params.decoderBlock
-
           in  ''
               use postgres_types::ToSql;
 
@@ -147,6 +69,6 @@ in  Algebra.module
 
               ${paramsSection}
               ${params.typeDecls}
-              ${decodeImpl}
+              ${params.statementImpl}
               ''
       )

@@ -2,33 +2,37 @@ let Algebra = ./Algebra/package.dhall
 
 let Deps = ../Deps/package.dhall
 
+let Field = { pgName : Text, fieldName : Text, fieldType : Text }
+
 let Params =
       { typeName : Text
       , pgSchema : Text
       , pgTypeName : Text
-      , fieldDeclarations : List Text
+      , fields : List Field
       }
 
 let run =
       \(params : Params) ->
         let fieldDecls =
-              Deps.Prelude.Text.concatMapSep
-                "\n"
-                Text
-                ( \(field : Text) ->
-                    "    ${field},"
+              Deps.Prelude.Text.concatMap
+                Field
+                ( \(field : Field) ->
+                    ''
+                        /// Maps to `${field.pgName}`.
+                        #[postgres(name = "${field.pgName}")]
+                        pub ${field.fieldName}: ${field.fieldType},
+                    ''
                 )
-                params.fieldDeclarations
+                params.fields
 
         in  ''
             use postgres_types::{ToSql, FromSql};
 
             /// Representation of the `${params.pgTypeName}` PostgreSQL composite type.
-            #[derive(Debug, Clone, PartialEq, ToSql, FromSql)]
+            #[derive(Debug, Clone, PartialEq, Eq, Default, ToSql, FromSql)]
             #[postgres(name = "${params.pgTypeName}")]
             pub struct ${params.typeName} {
-            ${fieldDecls}
-            }
+            ${fieldDecls}}
             ''
 
-in  Algebra.module Params run
+in  { Params, Field, run }

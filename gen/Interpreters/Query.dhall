@@ -47,7 +47,7 @@ let render =
                 MemberModule.Output
                 ( \(member : MemberModule.Output) ->
                     ''
-                    ${member.fieldDeclaration},
+                    ${member.fieldDeclaration}
                     ''
                 )
                 params
@@ -59,36 +59,17 @@ let render =
                 (\(member : MemberModule.Output) -> member.paramExpr)
                 params
 
-        let decodeBody =
-              merge
-                { rows_affected =
-                    ''
-                            Ok(rows_affected)
-                    ''
-                , optional =
-                    ''
-                            match rows.into_iter().next() {
-                                Some(row) => Ok(Some(OutputRow::from_row(&row))),
-                                None => Ok(None),
-                            }
-                    ''
-                , single =
-                    ''
-                            let row = rows.into_iter().next()
-                                .expect("expected exactly one row");
-                            Ok(OutputRow::from_row(&row))
-                    ''
-                , multiple =
-                    ''
-                            Ok(rows.iter().map(OutputRow::from_row).collect())
-                    ''
-                }
-                result.decoderBlock
-
         let sqlDocLines =
-              Deps.Lude.Extensions.Text.prefixEachLine
-                "/// "
-                fragments.docComment
+              "/// "
+              ++ Deps.Lude.Extensions.Text.prefixEachLine
+                   "/// "
+                   fragments.docComment
+
+        let hasParams =
+              Deps.Prelude.List.null
+                MemberModule.Output
+                params
+                == False
 
         let statementModuleContents =
               Templates.StatementModule.run
@@ -97,11 +78,11 @@ let render =
                 , srcPath = input.srcPath
                 , sqlDocLines
                 , sqlExp = fragments.sqlExp
+                , hasParams
                 , paramFields
                 , paramExprs
                 , typeDecls = result.typeDecls
-                , decodeBody
-                , decoderBlock = result.decoderBlock
+                , statementImpl = result.statementImpl
                 }
 
         in  { statementModuleName

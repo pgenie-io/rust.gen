@@ -6,7 +6,7 @@ let Member = ./Member.dhall
 
 let Input = Deps.Sdk.Project.ResultRows
 
-let Output = Text -> { decoderBlock : Text, typeDecls : Text }
+let Output = Text -> { statementImpl : Text, typeDecls : Text }
 
 let run =
       \(config : Algebra.Config) ->
@@ -68,17 +68,69 @@ let run =
                         let resolvedCardinality =
                               merge
                                 { Optional =
-                                  { decoderBlock = "optional"
+                                  { statementImpl =
+                                      ''
+                                      impl crate::Statement for Input {
+                                          type Output = Output;
+
+                                          fn sql() -> &'static str {
+                                              SQL
+                                          }
+
+                                          fn params(&self) -> Vec<&(dyn postgres_types::ToSql + Sync)> {
+                                              self.params()
+                                          }
+
+                                          fn decode(rows: Vec<tokio_postgres::Row>, _rows_affected: u64) -> Self::Output {
+                                              rows.into_iter().next().map(|row| OutputRow::from_row(&row))
+                                          }
+                                      }
+                                      ''
                                   , resultTypeDecl =
                                       "/// Output type: at most one row.\npub type Output = Option<OutputRow>;"
                                   }
                                 , Single =
-                                  { decoderBlock = "single"
+                                  { statementImpl =
+                                      ''
+                                      impl crate::Statement for Input {
+                                          type Output = Output;
+
+                                          fn sql() -> &'static str {
+                                              SQL
+                                          }
+
+                                          fn params(&self) -> Vec<&(dyn postgres_types::ToSql + Sync)> {
+                                              self.params()
+                                          }
+
+                                          fn decode(rows: Vec<tokio_postgres::Row>, _rows_affected: u64) -> Self::Output {
+                                              let row = rows.into_iter().next().expect("expected exactly one row");
+                                              OutputRow::from_row(&row)
+                                          }
+                                      }
+                                      ''
                                   , resultTypeDecl =
                                       "/// Output type: exactly one row.\npub type Output = OutputRow;"
                                   }
                                 , Multiple =
-                                  { decoderBlock = "multiple"
+                                  { statementImpl =
+                                      ''
+                                      impl crate::Statement for Input {
+                                          type Output = Output;
+
+                                          fn sql() -> &'static str {
+                                              SQL
+                                          }
+
+                                          fn params(&self) -> Vec<&(dyn postgres_types::ToSql + Sync)> {
+                                              self.params()
+                                          }
+
+                                          fn decode(rows: Vec<tokio_postgres::Row>, _rows_affected: u64) -> Self::Output {
+                                              rows.iter().map(|row| OutputRow::from_row(row)).collect()
+                                          }
+                                      }
+                                      ''
                                   , resultTypeDecl =
                                       "/// Output type: multiple rows.\npub type Output = Vec<OutputRow>;"
                                   }
@@ -92,7 +144,7 @@ let run =
                               ${rowTypeDecl}
                               ''
 
-                        in  { decoderBlock = resolvedCardinality.decoderBlock
+                        in  { statementImpl = resolvedCardinality.statementImpl
                             , typeDecls
                             }
                     )

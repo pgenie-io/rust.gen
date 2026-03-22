@@ -6,7 +6,7 @@ let ResultRows = ./ResultRows.dhall
 
 let Input = Deps.Sdk.Project.Result
 
-let Output = Text -> { typeDecls : Text, decoderBlock : Text }
+let Output = Text -> { typeDecls : Text, statementImpl : Text }
 
 let Result = Deps.Sdk.Compiled.Type Output
 
@@ -26,7 +26,24 @@ let run =
                       /// Output type: number of rows affected.
                       pub type Output = u64;
                       ''
-                  , decoderBlock = "rows_affected"
+                  , statementImpl =
+                      ''
+                      impl crate::Statement for Input {
+                          type Output = Output;
+
+                          fn sql() -> &'static str {
+                              SQL
+                          }
+
+                          fn params(&self) -> Vec<&(dyn postgres_types::ToSql + Sync)> {
+                              self.params()
+                          }
+
+                          fn decode(_rows: Vec<tokio_postgres::Row>, rows_affected: u64) -> Self::Output {
+                              rows_affected
+                          }
+                      }
+                      ''
                   }
               )
           )

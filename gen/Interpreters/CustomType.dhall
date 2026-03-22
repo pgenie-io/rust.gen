@@ -53,12 +53,15 @@ in  Algebra.module
                                         { typeName
                                         , pgSchema = input.pgSchema
                                         , pgTypeName = input.pgName
-                                        , fieldDeclarations =
+                                        , fields =
                                             Deps.Prelude.List.map
                                               MemberGen.Output
-                                              Text
+                                              Templates.CustomCompositeTypeModule.Field
                                               ( \(member : MemberGen.Output) ->
-                                                  member.fieldDeclaration
+                                                  { pgName = member.pgName
+                                                  , fieldName = member.fieldName
+                                                  , fieldType = member.fieldType
+                                                  }
                                               )
                                               members
                                         }

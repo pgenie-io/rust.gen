@@ -69,24 +69,6 @@ let combineOutputs =
               , content = Templates.LibRs.run { rootModuleName = config.rootModuleName }
               }
 
-        let typesModRs
-            : Sdk.File.Type
-            = { path = "src/types/mod.rs"
-              , content =
-                  ''
-                  ${typeModNames}
-                  ''
-              }
-
-        let statementsModRs
-            : Sdk.File.Type
-            = { path = "src/statements/mod.rs"
-              , content =
-                  ''
-                  ${stmtModNames}
-                  ''
-              }
-
         let packageName =
               Deps.CodegenKit.Name.toTextInKebab
                 (Deps.CodegenKit.Name.concat input.space [ input.name ])
@@ -107,7 +89,127 @@ let combineOutputs =
                     }
               }
 
-        in      [ cargoToml, libRs, typesModRs, statementsModRs ]
+        let mappingModRs
+            : Sdk.File.Type
+            = { path = "src/mapping/mod.rs"
+              , content =
+                  ''
+                  //! Shared PostgreSQL statement mapping primitives.
+
+                  mod decoding_error;
+                  pub use decoding_error::{decode_cell, DecodingError};
+
+                  /// Implemented by each query's parameter struct. Provides a uniform way to
+                  /// prepare and execute statements against a [`tokio_postgres::Client`].
+                  pub trait Statement {
+                      /// The type returned when the statement is successfully executed.
+                      type Result;
+
+                      const SQL: &str;
+
+                      const PARAM_TYPES: &'static [tokio_postgres::types::Type];
+
+                      /// Encode `self` as a list of type-erased parameter references.
+                      fn encode_params(&self) -> impl AsRef<[&(dyn tokio_postgres::types::ToSql + Sync)]>;
+
+                      /// Whether the statement returns rows.
+                      const RETURNS_ROWS: bool;
+
+                      fn decode_result(
+                          rows: Vec<tokio_postgres::Row>,
+                          affected_rows: u64,
+                      ) -> Result<Self::Result, DecodingError>;
+                  }
+                  ''
+              }
+
+        let decodingErrorRs
+            : Sdk.File.Type
+            = { path = "src/mapping/decoding_error.rs"
+              , content =
+                  ''
+                  use tokio_postgres::{types::FromSql, Row};
+
+                  #[derive(Debug)]
+                  pub enum DecodingError {
+                      UnexpectedAmountOfRows {
+                          expected: usize,
+                          actual: usize,
+                      },
+                      Cell {
+                          row: usize,
+                          column: usize,
+                          source: tokio_postgres::Error,
+                      },
+                  }
+
+                  impl std::fmt::Display for DecodingError {
+                      fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                          match self {
+                              DecodingError::UnexpectedAmountOfRows { expected, actual } => {
+                                  write!(f, "expected {expected} row(s), got {actual}")
+                              }
+                              DecodingError::Cell {
+                                  row,
+                                  column,
+                                  source: error,
+                              } => {
+                                  write!(f, "error at row {row}, column {column}: {error}")
+                              }
+                          }
+                      }
+                  }
+
+                  impl std::error::Error for DecodingError {
+                      fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+                          match self {
+                              DecodingError::Cell { source: error, .. } => Some(error),
+                              DecodingError::UnexpectedAmountOfRows { .. } => None,
+                          }
+                      }
+                  }
+
+                  /// Decode a single result-set cell and attach its row/column location to any
+                  /// PostgreSQL decoding error.
+                  pub fn decode_cell<'a, T: FromSql<'a>>(
+                      input_row: &'a Row,
+                      row_index: usize,
+                      column_index: usize,
+                  ) -> Result<T, DecodingError> {
+                      input_row
+                          .try_get(column_index)
+                          .map_err(|source| DecodingError::Cell {
+                              row: row_index,
+                              column: column_index,
+                              source,
+                          })
+                  }
+                  ''
+              }
+
+        let statementsRs
+            : Sdk.File.Type
+            = { path = "src/statements.rs"
+              , content =
+                  ''
+                  //! Mappings to all queries in the project.
+                  //!
+                  //! Each sub-module exposes a parameter struct that implements [`crate::mapping::Statement`].
+
+                  ${stmtModNames}
+                  ''
+              }
+
+        let typesRs
+            : Sdk.File.Type
+            = { path = "src/types.rs"
+              , content =
+                  ''
+                  ${typeModNames}
+                  ''
+              }
+
+        in      [ cargoToml, libRs, mappingModRs, decodingErrorRs, typesRs, statementsRs ]
               # customTypeFiles
               # statementFiles
             : List Sdk.File.Type

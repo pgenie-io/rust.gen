@@ -14,6 +14,7 @@ let Output =
       { fieldName : Text
       , fieldType : Text
       , fieldDeclaration : Text
+      , pgName : Text
       , paramExpr : Text
       , decoderExpr : Text
       }
@@ -35,7 +36,7 @@ let run =
               let fieldDeclaration =
                     ''
                     /// Maps to `${input.pgName}`.
-                    pub ${fieldName}: ${fieldType}''
+                    pub ${fieldName}: ${fieldType},''
 
               let paramExpr = "&self.${fieldName}"
 
@@ -46,6 +47,7 @@ let run =
                     { fieldName
                     , fieldType
                     , fieldDeclaration
+                    , pgName = input.pgName
                     , paramExpr
                     , decoderExpr
                     }

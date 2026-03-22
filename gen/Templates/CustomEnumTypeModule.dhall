@@ -11,29 +11,51 @@ let Params =
       , variants : List Variant
       }
 
+let renderVariant =
+      \(variant : Variant) ->
+        ''
+            /// Corresponds to the PostgreSQL enum variant `${variant.pgValue}`.
+            #[postgres(name = "${variant.pgValue}")]
+            ${variant.name},
+        ''
+
+let renderFirstVariant =
+      \(variant : Variant) ->
+        ''
+            /// Corresponds to the PostgreSQL enum variant `${variant.pgValue}`.
+            #[postgres(name = "${variant.pgValue}")]
+            #[default]
+            ${variant.name},
+        ''
+
 let run =
       \(params : Params) ->
         let variantDecls =
-              Deps.Prelude.Text.concatMapSep
-                "\n"
-                Variant
-                ( \(variant : Variant) ->
-                    ''
-                        /// Corresponds to the PostgreSQL enum variant `${variant.pgValue}`.
-                        #[postgres(name = "${variant.pgValue}")]
-                        ${variant.name},''
-                )
-                params.variants
+              merge
+                { None = ""
+                , Some =
+                    \(head : Variant) ->
+                      let first = renderFirstVariant head
+
+                      let rest =
+                            Deps.Prelude.Text.concatMap
+                              Variant
+                              renderVariant
+                              (Deps.Prelude.List.drop 1 Variant params.variants)
+
+                      in  first ++ rest
+                }
+                (List/head Variant params.variants)
 
         in  ''
-            use postgres_types::{ToSql, FromSql};
+            use postgres_types::{FromSql, ToSql};
 
-            /// Representation of the `${params.pgTypeName}` PostgreSQL enumeration type.
-            #[derive(Debug, Clone, PartialEq, Eq, ToSql, FromSql)]
+            /// Representation of the `${params.pgTypeName}` user-declared PostgreSQL enumeration type.
+            #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, ToSql, FromSql)]
             #[postgres(name = "${params.pgTypeName}")]
+            #[derive(Default)]
             pub enum ${params.typeName} {
-            ${variantDecls}
-            }
+            ${variantDecls}}
             ''
 
 in  { Params, Variant, run }
