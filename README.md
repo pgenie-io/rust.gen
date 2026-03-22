@@ -145,3 +145,61 @@ pgenie generate
 ```
 
 The generated crate will be placed in `artifacts/rust/`.
+
+## Using the generated code
+
+The generated crate is designed to be used directly from application code or from
+integration tests. A small helper like `execute_preparing` can hide the boilerplate
+of preparing statements, binding parameters, and decoding results while still
+keeping the generated API visible.
+
+The example below shows the pattern used in the demo tests: obtain a
+`deadpool_postgres::Pool`, pull a client from the pool, prepare the generated
+statement, and execute it through the generated `Statement` implementation.
+
+```rust
+use my_space_music_catalogue::mapping::Statement;
+use my_space_music_catalogue::statements;
+
+async fn execute_preparing<S: Statement>(
+  pool: &deadpool_postgres::Pool,
+  statement: &S,
+) -> Result<S::Result, String> {
+  let params = statement.encode_params();
+  let client = pool
+    .get()
+    .await
+    .map_err(|e| format!("Pool get: {e}"))?;
+
+  let prepared = client
+    .prepare_typed_cached(S::SQL, S::PARAM_TYPES)
+    .await
+    .map_err(|e| format!("Preparation error: {e}"))?;
+
+  if S::RETURNS_ROWS {
+    let rows = client
+      .query(&prepared, params.as_ref())
+      .await
+      .map_err(|e| format!("Query: {e}"))?;
+    let affected = rows.len() as u64;
+    S::decode_result(rows, affected).map_err(|e| format!("Decoding: {e}"))
+  } else {
+    let affected = client
+      .execute(&prepared, params.as_ref())
+      .await
+      .map_err(|e| format!("Execution: {e}"))?;
+    S::decode_result(Vec::new(), affected).map_err(|e| format!("Decoding: {e}"))
+  }
+}
+
+async fn example(pool: &deadpool_postgres::Pool) -> Result<(), String> {
+  let statement = statements::insert_album::Input::default();
+  execute_preparing(pool, &statement).await?;
+  Ok(())
+}
+```
+
+If you are wiring generated bindings into your own project, implement a similar
+utility function around deadpool_postgres. That keeps connection management in one
+place and lets the generated `Statement` trait handle SQL text, parameter encoding,
+and result decoding consistently across all statements.
