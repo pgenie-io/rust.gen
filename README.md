@@ -160,6 +160,8 @@ statement, and execute it through the generated `Statement` implementation.
 ```rust
 use my_space_music_catalogue::mapping::Statement;
 use my_space_music_catalogue::statements;
+use my_space_music_catalogue::types;
+use chrono::NaiveDate;
 
 async fn execute_preparing<S: Statement>(
   pool: &deadpool_postgres::Pool,
@@ -193,8 +195,37 @@ async fn execute_preparing<S: Statement>(
 }
 
 async fn example(pool: &deadpool_postgres::Pool) -> Result<(), String> {
-  let statement = statements::insert_album::Input::default();
-  execute_preparing(pool, &statement).await?;
+  // Insert a real album record.
+  let inserted = execute_preparing(
+      pool,
+      &statements::insert_album::Input {
+        name: "Space Jazz Vol. 1".to_string(),
+        released: NaiveDate::from_ymd_opt(2020, 5, 4).unwrap(),
+        format: types::AlbumFormat::Vinyl,
+        recording: types::RecordingInfo {
+          studio_name: Some("Galactic Studio".to_string()),
+          city: Some("Lunar City".to_string()),
+          country: Some("Moon".to_string()),
+          recorded_date: Some(NaiveDate::from_ymd_opt(2019, 12, 1).unwrap()),
+        },
+      }
+  ).await?;
+  // `insert_album` returns an `OutputRow` containing the new `id`.
+  println!("Inserted album id={}", inserted.id);
+
+  // Now query by name to demonstrate reading rows back.
+  let rows = execute_preparing(
+      pool,
+      &statements::select_album_by_name::Input { name: "Space Jazz Vol. 1".to_string() }
+  ).await?;
+
+  for row in rows {
+    println!(
+      "Found album id={} name={} released={:?} format={:?} recording={:?}",
+      row.id, row.name, row.released, row.format, row.recording
+    );
+  }
+
   Ok(())
 }
 ```
