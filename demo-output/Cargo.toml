@@ -1,0 +1,18 @@
+[package]
+name = "music_catalogue"
+version = "0.1.0"
+edition = "2021"
+description = "Type-safe mapping to the music_catalogue database"
+
+[dependencies]
+tokio-postgres = { version = "0.7", features = [
+    "with-chrono-0_4",
+    "with-uuid-1",
+    "with-serde_json-1",
+] }
+postgres-types = { version = "0.2", features = [
+    "derive",
+    "with-chrono-0_4",
+    "with-uuid-1",
+] }
+chrono = { version = "0.4", default-features = false, features = ["std"] }

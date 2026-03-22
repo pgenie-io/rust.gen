@@ -1,0 +1,19 @@
+# Dhall
+.dhall-cache/
+*.dhall-cache
+*.dhallb
+
+# Rust (demo-output build artifacts)
+demo-output/target/
+demo-output/Cargo.lock
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
