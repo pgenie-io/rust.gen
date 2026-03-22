@@ -10,7 +10,7 @@ let Scalar = ./Scalar.dhall
 
 let Input = Model.Value
 
-let Output = { sig : Text }
+let Output = { sig : Text, pgType : Text, pgCastSuffix : Text }
 
 let Result = Sdk.Compiled.Type Output
 
@@ -38,9 +38,20 @@ let run =
                             (\(inner : Text) -> "Vec<${inner}>")
                             elementSig
 
-                    in  Sdk.Compiled.ok Output { sig = arraySig }
+                    in  Sdk.Compiled.ok
+                          Output
+                          { sig = arraySig
+                          , pgType = scalar.pgType
+                          , pgCastSuffix = scalar.pgCastSuffix
+                          }
                 )
-                (Sdk.Compiled.ok Output { sig = scalar.sig })
+                ( Sdk.Compiled.ok
+                    Output
+                    { sig = scalar.sig
+                    , pgType = scalar.pgType
+                    , pgCastSuffix = scalar.pgCastSuffix
+                    }
+                )
           )
           (Scalar.run config input.scalar)
 

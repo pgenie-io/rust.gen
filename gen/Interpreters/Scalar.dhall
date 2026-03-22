@@ -10,7 +10,7 @@ let Primitive = ./Primitive.dhall
 
 let Input = Model.Scalar
 
-let Output = { sig : Text }
+let Output = { sig : Text, pgType : Text, pgCastSuffix : Text }
 
 let run =
       \(config : Algebra.Config) ->
@@ -21,15 +21,21 @@ let run =
                 Sdk.Compiled.map
                   Primitive.Output
                   Output
-                  (\(p : Primitive.Output) -> { sig = p.sig })
+                  ( \(p : Primitive.Output) ->
+                      { sig = p.sig, pgType = p.pgType, pgCastSuffix = "" }
+                  )
                   (Primitive.run config primitive)
           , Custom =
               \(name : Model.Name) ->
-                Sdk.Compiled.ok
-                  Output
-                  { sig =
-                      "crate::types::${Deps.CodegenKit.Name.toTextInPascal name}"
-                  }
+                let pgName = Deps.CodegenKit.Name.toTextInSnake name
+
+                in  Sdk.Compiled.ok
+                      Output
+                      { sig =
+                          "crate::types::${Deps.CodegenKit.Name.toTextInPascal name}"
+                      , pgType = "Type::UNKNOWN"
+                      , pgCastSuffix = "::${pgName}"
+                      }
           }
           input
 
