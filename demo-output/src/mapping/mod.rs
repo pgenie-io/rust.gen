@@ -14,17 +14,9 @@ pub trait Statement {
     const PARAM_TYPES: &'static [tokio_postgres::types::Type];
 
     /// Encode `self` as a list of type-erased parameter references.
-    ///
-    /// Implementations return a stack-allocated, fixed-size array (no heap
-    /// allocation).
     fn encode_params(&self) -> impl AsRef<[&(dyn tokio_postgres::types::ToSql + Sync)]>;
 
-    /// Whether the statement returns rows (i.e. is a `SELECT` or contains a
-    /// `RETURNING` clause). When `true` the execution functions use
-    /// [`tokio_postgres::GenericClient::query`] and forward the rows together
-    /// with `rows.len() as u64` as the affected-rows count. When `false` they
-    /// use [`tokio_postgres::GenericClient::execute`] instead, which discards
-    /// any rows but returns the actual number of rows affected by the statement.
+    /// Whether the statement returns rows.
     const RETURNS_ROWS: bool;
 
     fn decode_result(

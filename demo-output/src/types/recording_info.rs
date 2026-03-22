@@ -1,7 +1,6 @@
-use chrono::NaiveDate;
-use postgres_types::{FromSql, ToSql};
+use postgres_types::{ToSql, FromSql};
 
-/// Representation of the `recording_info` user-declared PostgreSQL record type.
+/// Representation of the `recording_info` PostgreSQL composite type.
 #[derive(Debug, Clone, PartialEq, Eq, Default, ToSql, FromSql)]
 #[postgres(name = "recording_info")]
 pub struct RecordingInfo {
@@ -16,5 +15,5 @@ pub struct RecordingInfo {
     pub country: Option<String>,
     /// Maps to `recorded_date`.
     #[postgres(name = "recorded_date")]
-    pub recorded_date: Option<NaiveDate>,
+    pub recorded_date: Option<chrono::NaiveDate>,
 }

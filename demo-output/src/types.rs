@@ -1,7 +1,4 @@
-//! PostgreSQL enum and composite type mappings.
-
 pub mod album_format;
+pub mod disc_info;
 pub mod recording_info;
-
-pub use album_format::AlbumFormat;
-pub use recording_info::RecordingInfo;
+pub mod track_info;

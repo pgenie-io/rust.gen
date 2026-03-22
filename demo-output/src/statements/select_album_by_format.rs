@@ -1,13 +1,19 @@
-use chrono::NaiveDate;
-use tokio_postgres::types::Type;
+use postgres_types::ToSql;
 
-use crate::types::{AlbumFormat, RecordingInfo};
+/// SQL query string.
+pub const SQL: &str = "select\n\
+  id,\n\
+  name,\n\
+  released,\n\
+  format,\n\
+  recording\n\
+from album\n\
+where format = $1";
 
 /// Parameters for the `select_album_by_format` query.
 ///
-/// # SQL Template
+/// # SQL
 ///
-/// ```sql
 /// select
 ///   id,
 ///   name,
@@ -16,73 +22,67 @@ use crate::types::{AlbumFormat, RecordingInfo};
 ///   recording
 /// from album
 /// where format = $format
-/// ```
 ///
-/// # Source Path
+/// # Source
 ///
 /// `./queries/select_album_by_format.sql`
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[derive(Debug, Clone)]
 pub struct Input {
-    /// Maps to `$format` in the template.
-    pub format: Option<AlbumFormat>,
+/// Maps to `format`.
+pub format: crate::types::AlbumFormat,
+
 }
 
-/// Result of the statement parameterised by [`Input`].
+impl Input {
+    pub fn params(&self) -> Vec<&(dyn postgres_types::ToSql + Sync)> {
+        vec![&self.format]
+    }
+}
+
+/// Output type: multiple rows.
 pub type Output = Vec<OutputRow>;
 
-/// Row of [`Output`].
-#[derive(Debug, Clone, PartialEq)]
+/// Row of the output.
+#[derive(Debug, Clone)]
 pub struct OutputRow {
-    /// Maps to the `id` result set column.
-    pub id: i64,
-    /// Maps to the `name` result set column.
-    pub name: String,
-    /// Maps to the `released` result set column.
-    pub released: Option<NaiveDate>,
-    /// Maps to the `format` result set column.
-    pub format: Option<AlbumFormat>,
-    /// Maps to the `recording` result set column.
-    pub recording: Option<RecordingInfo>,
+/// Maps to `id`.
+pub id: i64,
+/// Maps to `name`.
+pub name: String,
+/// Maps to `released`.
+pub released: Option<chrono::NaiveDate>,
+/// Maps to `format`.
+pub format: Option<crate::types::AlbumFormat>,
+/// Maps to `recording`.
+pub recording: Option<crate::types::RecordingInfo>,
 }
 
-impl crate::mapping::Statement for Input {
-    type Result = Output;
-
-    const RETURNS_ROWS: bool = true;
-
-    const SQL: &str = "select\n\
-                         id,\n\
-                         name,\n\
-                         released,\n\
-                         format,\n\
-                         recording\n\
-                       from album\n\
-                       where format = $1::album_format";
-
-    const PARAM_TYPES: &'static [tokio_postgres::types::Type] = &[Type::UNKNOWN];
-
-    #[allow(refining_impl_trait)]
-    fn encode_params(
-        &self,
-    ) -> [&(dyn tokio_postgres::types::ToSql + Sync); Self::PARAM_TYPES.len()] {
-        [&self.format]
-    }
-
-    fn decode_result(
-        rows: Vec<tokio_postgres::Row>,
-        _affected_rows: u64,
-    ) -> Result<Self::Result, crate::mapping::DecodingError> {
-        rows.into_iter()
-            .enumerate()
-            .map(|(row_index, row)| {
-                Ok(OutputRow {
-                    id: crate::mapping::decode_cell(&row, row_index, 0)?,
-                    name: crate::mapping::decode_cell(&row, row_index, 1)?,
-                    released: crate::mapping::decode_cell(&row, row_index, 2)?,
-                    format: crate::mapping::decode_cell(&row, row_index, 3)?,
-                    recording: crate::mapping::decode_cell(&row, row_index, 4)?,
-                })
-            })
-            .collect()
+impl OutputRow {
+    pub fn from_row(row: &tokio_postgres::Row) -> Self {
+        Self {
+            id: row.get("id"),
+            name: row.get("name"),
+            released: row.get("released"),
+            format: row.get("format"),
+            recording: row.get("recording"),
+        }
     }
 }
+
+
+impl crate::Statement for Input {
+    type Output = Output;
+
+    fn sql() -> &'static str {
+        SQL
+    }
+
+    fn params(&self) -> Vec<&(dyn postgres_types::ToSql + Sync)> {
+        self.params()
+    }
+
+    fn decode(rows: Vec<tokio_postgres::Row>, _rows_affected: u64) -> Self::Output {
+        rows.iter().map(|row| OutputRow::from_row(row)).collect()
+    }
+}
+

@@ -1,29 +1,23 @@
 use postgres_types::ToSql;
 
 /// SQL query string.
-pub const SQL: &str = "-- Update album recording information\n\
-update album\n\
-set recording = $1\n\
-where id = $2\n\
-returning *";
+pub const SQL: &str = "select id, name, tracks, disc\n\
+from album\n\
+where id = $1";
 
-/// Parameters for the `update_album_recording_returning` query.
+/// Parameters for the `select_album_with_tracks` query.
 ///
 /// # SQL
 ///
-/// -- Update album recording information
-/// update album
-/// set recording = $recording
+/// select id, name, tracks, disc
+/// from album
 /// where id = $id
-/// returning *
 ///
 /// # Source
 ///
-/// `./queries/update_album_recording_returning.sql`
+/// `./queries/select_album_with_tracks.sql`
 #[derive(Debug, Clone)]
 pub struct Input {
-/// Maps to `recording`.
-pub recording: Option<crate::types::RecordingInfo>,
 /// Maps to `id`.
 pub id: i64,
 
@@ -31,7 +25,7 @@ pub id: i64,
 
 impl Input {
     pub fn params(&self) -> Vec<&(dyn postgres_types::ToSql + Sync)> {
-        vec![&self.recording, &self.id]
+        vec![&self.id]
     }
 }
 
@@ -45,12 +39,6 @@ pub struct OutputRow {
 pub id: i64,
 /// Maps to `name`.
 pub name: String,
-/// Maps to `released`.
-pub released: Option<chrono::NaiveDate>,
-/// Maps to `format`.
-pub format: Option<crate::types::AlbumFormat>,
-/// Maps to `recording`.
-pub recording: Option<crate::types::RecordingInfo>,
 /// Maps to `tracks`.
 pub tracks: Option<Vec<crate::types::TrackInfo>>,
 /// Maps to `disc`.
@@ -62,9 +50,6 @@ impl OutputRow {
         Self {
             id: row.get("id"),
             name: row.get("name"),
-            released: row.get("released"),
-            format: row.get("format"),
-            recording: row.get("recording"),
             tracks: row.get("tracks"),
             disc: row.get("disc"),
         }
