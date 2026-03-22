@@ -4,7 +4,7 @@ A [pGenie](https://github.com/pgenie-io/pgenie) plugin that generates type-safe 
 
 ## What it generates
 
-For each pGenie project the plugin produces a self-contained Rust crate containing:
+The plugin produces a self-contained Rust crate containing:
 
 - **`Cargo.toml`** – a ready-to-build library with all required dependencies declared.
 - **`src/mapping/`** – shared PostgreSQL statement mapping primitives:
