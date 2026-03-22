@@ -1,52 +1,53 @@
-use postgres_types::ToSql;
-
-/// SQL query string.
-pub const SQL: &str = "update album\n\
-set released = $1\n\
-where id = $2";
+use tokio_postgres::types::Type;
 
 /// Parameters for the `update_album_released` query.
 ///
-/// # SQL
+/// # SQL Template
 ///
+/// ```sql
 /// update album
 /// set released = $released
 /// where id = $id
+/// ```
 ///
-/// # Source
+/// # Source Path
 ///
 /// `./queries/update_album_released.sql`
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct Input {
-/// Maps to `released`.
-pub released: Option<chrono::NaiveDate>,
-/// Maps to `id`.
-pub id: i64,
-
+    /// Maps to `$released` in the template.
+    pub released: Option<chrono::NaiveDate>,
+    /// Maps to `$id` in the template.
+    pub id: i64,
 }
 
-impl Input {
-    pub fn params(&self) -> Vec<&(dyn postgres_types::ToSql + Sync)> {
-        vec![&self.released, &self.id]
-    }
-}
-
-/// Output type: number of rows affected.
+/// Result of the statement parameterised by [`Input`].
+///
+/// Contains the number of rows affected by the statement.
 pub type Output = u64;
 
-impl crate::Statement for Input {
-    type Output = Output;
+impl crate::mapping::Statement for Input {
+    type Result = Output;
 
-    fn sql() -> &'static str {
-        SQL
+    const RETURNS_ROWS: bool = false;
+
+    const SQL: &str = "update album\n\
+set released = $1\n\
+where id = $2";
+
+    const PARAM_TYPES: &'static [tokio_postgres::types::Type] = &[Type::DATE, Type::INT8];
+
+    #[allow(refining_impl_trait)]
+    fn encode_params(
+        &self,
+    ) -> [&(dyn tokio_postgres::types::ToSql + Sync); Self::PARAM_TYPES.len()] {
+        [&self.released, &self.id]
     }
 
-    fn params(&self) -> Vec<&(dyn postgres_types::ToSql + Sync)> {
-        self.params()
-    }
-
-    fn decode(_rows: Vec<tokio_postgres::Row>, rows_affected: u64) -> Self::Output {
-        rows_affected
+    fn decode_result(
+        _rows: Vec<tokio_postgres::Row>,
+        affected_rows: u64,
+    ) -> Result<Self::Result, crate::mapping::DecodingError> {
+        Ok(affected_rows)
     }
 }
-

@@ -6,7 +6,9 @@ let Member = ./Member.dhall
 
 let Input = Deps.Sdk.Project.ResultRows
 
-let Output = Text -> { statementImpl : Text, typeDecls : Text }
+let ExtraCtx = { sqlExp : Text, paramTypes : Text, paramExprs : Text }
+
+let Output = ExtraCtx -> Text -> { statementImpl : Text, typeDecls : Text }
 
 let run =
       \(config : Algebra.Config) ->
@@ -29,110 +31,164 @@ let run =
               ( \(columns : List Member.Output) ->
                   Deps.Sdk.Compiled.ok
                     Output
-                    ( \(typeNameBase : Text) ->
+                    ( \(ctx : ExtraCtx) ->
+                      \(typeNameBase : Text) ->
                         let rowTypeName = "OutputRow"
 
                         let fieldDecls =
                               Deps.Prelude.Text.concatMapSep
                                 "\n"
                                 Member.Output
-                                (\(col : Member.Output) -> col.fieldDeclaration)
+                                (\(col : Member.Output) -> col.columnFieldDeclaration)
                                 columns
 
-                        let decoderFields =
-                              Deps.Prelude.Text.concatMapSep
-                                ",\n"
-                                Member.Output
-                                ( \(col : Member.Output) ->
-                                    "            ${col.fieldName}: ${col.decoderExpr}"
+                        let indexedColumns =
+                              Deps.Prelude.List.indexed Member.Output columns
+
+                        let singleDecoderFields =
+                              Deps.Prelude.Text.concatSep
+                                "\n"
+                                ( Deps.Prelude.List.map
+                                    { index : Natural, value : Member.Output }
+                                    Text
+                                    ( \(ic : { index : Natural, value : Member.Output }) ->
+                                            "                    "
+                                        ++  ic.value.fieldName
+                                        ++  ": crate::mapping::decode_cell(row, 0, "
+                                        ++  Natural/show ic.index
+                                        ++  ")?,"
+                                    )
+                                    indexedColumns
                                 )
-                                columns
+
+                        let multipleDecoderFields =
+                              Deps.Prelude.Text.concatSep
+                                "\n"
+                                ( Deps.Prelude.List.map
+                                    { index : Natural, value : Member.Output }
+                                    Text
+                                    ( \(ic : { index : Natural, value : Member.Output }) ->
+                                            "                    "
+                                        ++  ic.value.fieldName
+                                        ++  ": crate::mapping::decode_cell(&row, row_index, "
+                                        ++  Natural/show ic.index
+                                        ++  ")?,"
+                                    )
+                                    indexedColumns
+                                )
 
                         let rowTypeDecl =
                               ''
-                              /// Row of the output.
-                              #[derive(Debug, Clone)]
+                              /// Row of [`Output`].
+                              #[derive(Debug, Clone, PartialEq)]
                               pub struct ${rowTypeName} {
                               ${fieldDecls}
                               }
-
-                              impl ${rowTypeName} {
-                                  pub fn from_row(row: &tokio_postgres::Row) -> Self {
-                                      Self {
-                              ${decoderFields},
-                                      }
-                                  }
-                              }
                               ''
+
+                        let implPreamble =
+                                  "impl crate::mapping::Statement for Input {\n"
+                              ++  "    type Result = Output;\n"
+                              ++  "\n"
+                              ++  "    const RETURNS_ROWS: bool = true;\n"
+                              ++  "\n"
+                              ++  "    const SQL: &str = "
+                              ++  ctx.sqlExp
+                              ++  ";\n"
+                              ++  "\n"
+                              ++  "    const PARAM_TYPES: &'static [tokio_postgres::types::Type] = &["
+                              ++  ctx.paramTypes
+                              ++  "];\n"
+                              ++  "\n"
+                              ++  "    #[allow(refining_impl_trait)]\n"
+                              ++  "    fn encode_params(\n"
+                              ++  "        &self,\n"
+                              ++  "    ) -> [&(dyn tokio_postgres::types::ToSql + Sync); Self::PARAM_TYPES.len()] {\n"
+                              ++  "        ["
+                              ++  ctx.paramExprs
+                              ++  "]\n"
+                              ++  "    }\n"
 
                         let resolvedCardinality =
                               merge
                                 { Optional =
                                   { statementImpl =
-                                      ''
-                                      impl crate::Statement for Input {
-                                          type Output = Output;
-
-                                          fn sql() -> &'static str {
-                                              SQL
-                                          }
-
-                                          fn params(&self) -> Vec<&(dyn postgres_types::ToSql + Sync)> {
-                                              self.params()
-                                          }
-
-                                          fn decode(rows: Vec<tokio_postgres::Row>, _rows_affected: u64) -> Self::Output {
-                                              rows.into_iter().next().map(|row| OutputRow::from_row(&row))
-                                          }
-                                      }
-                                      ''
+                                          implPreamble
+                                      ++  "\n"
+                                      ++  "    fn decode_result(\n"
+                                      ++  "        rows: Vec<tokio_postgres::Row>,\n"
+                                      ++  "        _affected_rows: u64,\n"
+                                      ++  "    ) -> Result<Self::Result, crate::mapping::DecodingError> {\n"
+                                      ++  "        match rows.len() {\n"
+                                      ++  "            0 => Ok(None),\n"
+                                      ++  "            1 => {\n"
+                                      ++  "                let row = rows.first().unwrap();\n"
+                                      ++  "                Ok(Some(OutputRow {\n"
+                                      ++  singleDecoderFields
+                                      ++  "\n"
+                                      ++  "                }))\n"
+                                      ++  "            }\n"
+                                      ++  "            n => Err(crate::mapping::DecodingError::UnexpectedAmountOfRows {\n"
+                                      ++  "                expected: 1,\n"
+                                      ++  "                actual: n,\n"
+                                      ++  "            }),\n"
+                                      ++  "        }\n"
+                                      ++  "    }\n"
+                                      ++  "}"
                                   , resultTypeDecl =
-                                      "/// Output type: at most one row.\npub type Output = Option<OutputRow>;"
+                                      "/// Result of the statement parameterised by [`Input`].\npub type Output = Option<OutputRow>;"
                                   }
                                 , Single =
                                   { statementImpl =
-                                      ''
-                                      impl crate::Statement for Input {
-                                          type Output = Output;
-
-                                          fn sql() -> &'static str {
-                                              SQL
-                                          }
-
-                                          fn params(&self) -> Vec<&(dyn postgres_types::ToSql + Sync)> {
-                                              self.params()
-                                          }
-
-                                          fn decode(rows: Vec<tokio_postgres::Row>, _rows_affected: u64) -> Self::Output {
-                                              let row = rows.into_iter().next().expect("expected exactly one row");
-                                              OutputRow::from_row(&row)
-                                          }
-                                      }
-                                      ''
+                                          implPreamble
+                                      ++  "\n"
+                                      ++  "    fn decode_result(\n"
+                                      ++  "        rows: Vec<tokio_postgres::Row>,\n"
+                                      ++  "        _affected_rows: u64,\n"
+                                      ++  "    ) -> Result<Self::Result, crate::mapping::DecodingError> {\n"
+                                      ++  "        match rows.len() {\n"
+                                      ++  "            0 => Err(crate::mapping::DecodingError::UnexpectedAmountOfRows {\n"
+                                      ++  "                expected: 1,\n"
+                                      ++  "                actual: 0,\n"
+                                      ++  "            }),\n"
+                                      ++  "            1 => {\n"
+                                      ++  "                let row = rows.first().unwrap();\n"
+                                      ++  "                Ok(OutputRow {\n"
+                                      ++  singleDecoderFields
+                                      ++  "\n"
+                                      ++  "                })\n"
+                                      ++  "            }\n"
+                                      ++  "            n => Err(crate::mapping::DecodingError::UnexpectedAmountOfRows {\n"
+                                      ++  "                expected: 1,\n"
+                                      ++  "                actual: n,\n"
+                                      ++  "            }),\n"
+                                      ++  "        }\n"
+                                      ++  "    }\n"
+                                      ++  "}"
                                   , resultTypeDecl =
-                                      "/// Output type: exactly one row.\npub type Output = OutputRow;"
+                                      "/// Result of the statement parameterised by [`Input`].\npub type Output = OutputRow;"
                                   }
                                 , Multiple =
                                   { statementImpl =
-                                      ''
-                                      impl crate::Statement for Input {
-                                          type Output = Output;
-
-                                          fn sql() -> &'static str {
-                                              SQL
-                                          }
-
-                                          fn params(&self) -> Vec<&(dyn postgres_types::ToSql + Sync)> {
-                                              self.params()
-                                          }
-
-                                          fn decode(rows: Vec<tokio_postgres::Row>, _rows_affected: u64) -> Self::Output {
-                                              rows.iter().map(|row| OutputRow::from_row(row)).collect()
-                                          }
-                                      }
-                                      ''
+                                          implPreamble
+                                      ++  "\n"
+                                      ++  "    fn decode_result(\n"
+                                      ++  "        rows: Vec<tokio_postgres::Row>,\n"
+                                      ++  "        _affected_rows: u64,\n"
+                                      ++  "    ) -> Result<Self::Result, crate::mapping::DecodingError> {\n"
+                                      ++  "        rows.into_iter()\n"
+                                      ++  "            .enumerate()\n"
+                                      ++  "            .map(|(row_index, row)| {\n"
+                                      ++  "                Ok(OutputRow {\n"
+                                      ++  multipleDecoderFields
+                                      ++  "\n"
+                                      ++  "                })\n"
+                                      ++  "            })\n"
+                                      ++  "            .collect()\n"
+                                      ++  "    }\n"
+                                      ++  "}"
                                   , resultTypeDecl =
-                                      "/// Output type: multiple rows.\npub type Output = Vec<OutputRow>;"
+                                      "/// Result of the statement parameterised by [`Input`].\npub type Output = Vec<OutputRow>;"
                                   }
                                 }
                                 input.cardinality

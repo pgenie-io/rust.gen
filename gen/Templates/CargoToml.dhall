@@ -28,5 +28,11 @@ in  Algebra.module
               "with-uuid-1",
           ] }
           chrono = { version = "0.4", default-features = false, features = ["std"] }
+
+          [dev-dependencies]
+          deadpool-postgres = "0.14.1"
+          tokio = { version = "1", features = ["full"] }
+          testcontainers = "0.27.1"
+          testcontainers-modules = { version = "0.15", features = ["postgres"] }
           ''
       )

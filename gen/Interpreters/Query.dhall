@@ -40,23 +40,27 @@ let render =
 
         let typeName = Deps.CodegenKit.Name.toTextInPascal input.name
 
-        let result = result typeName
-
-        let paramFields =
-              Deps.Prelude.Text.concatMap
-                MemberModule.Output
-                ( \(member : MemberModule.Output) ->
-                    ''
-                    ${member.fieldDeclaration}
-                    ''
-                )
-                params
-
         let paramExprs =
               Deps.Prelude.Text.concatMapSep
                 ", "
                 MemberModule.Output
                 (\(member : MemberModule.Output) -> member.paramExpr)
+                params
+
+        let paramTypesText =
+              Deps.Prelude.Text.concatMapSep
+                ", "
+                MemberModule.Output
+                (\(member : MemberModule.Output) -> member.pgType)
+                params
+
+        let result = result { sqlExp = fragments.sqlExp, paramTypes = paramTypesText, paramExprs } typeName
+
+        let paramFields =
+              Deps.Prelude.Text.concatMapSep
+                "\n"
+                MemberModule.Output
+                (\(member : MemberModule.Output) -> member.paramFieldDeclaration)
                 params
 
         let sqlDocLines =
@@ -77,10 +81,8 @@ let render =
                 , typeName
                 , srcPath = input.srcPath
                 , sqlDocLines
-                , sqlExp = fragments.sqlExp
                 , hasParams
                 , paramFields
-                , paramExprs
                 , typeDecls = result.typeDecls
                 , statementImpl = result.statementImpl
                 }

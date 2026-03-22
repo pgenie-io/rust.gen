@@ -14,9 +14,12 @@ let Output =
       { fieldName : Text
       , fieldType : Text
       , fieldDeclaration : Text
+      , paramFieldDeclaration : Text
+      , columnFieldDeclaration : Text
       , pgName : Text
       , paramExpr : Text
       , decoderExpr : Text
+      , pgType : Text
       }
 
 let run =
@@ -33,10 +36,43 @@ let run =
               let fieldType =
                     if input.isNullable then "Option<${sig}>" else sig
 
+              let indent = "    "
+
               let fieldDeclaration =
-                    ''
-                    /// Maps to `${input.pgName}`.
-                    pub ${fieldName}: ${fieldType},''
+                        indent
+                    ++  "/// Maps to `"
+                    ++  input.pgName
+                    ++  "`.\n"
+                    ++  indent
+                    ++  "pub "
+                    ++  fieldName
+                    ++  ": "
+                    ++  fieldType
+                    ++  ","
+
+              let paramFieldDeclaration =
+                        indent
+                    ++  "/// Maps to `\$"
+                    ++  input.pgName
+                    ++  "` in the template.\n"
+                    ++  indent
+                    ++  "pub "
+                    ++  fieldName
+                    ++  ": "
+                    ++  fieldType
+                    ++  ","
+
+              let columnFieldDeclaration =
+                        indent
+                    ++  "/// Maps to the `"
+                    ++  input.pgName
+                    ++  "` result set column.\n"
+                    ++  indent
+                    ++  "pub "
+                    ++  fieldName
+                    ++  ": "
+                    ++  fieldType
+                    ++  ","
 
               let paramExpr = "&self.${fieldName}"
 
@@ -47,9 +83,12 @@ let run =
                     { fieldName
                     , fieldType
                     , fieldDeclaration
+                    , paramFieldDeclaration
+                    , columnFieldDeclaration
                     , pgName = input.pgName
                     , paramExpr
                     , decoderExpr
+                    , pgType = value.pgType
                     }
           )
           ( Sdk.Compiled.nest

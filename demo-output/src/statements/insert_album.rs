@@ -1,73 +1,78 @@
-use postgres_types::ToSql;
-
-/// SQL query string.
-pub const SQL: &str = "insert into album (name, released, format, recording)\n\
-values ($1, $2, $3, $4)\n\
-returning id";
+use tokio_postgres::types::Type;
 
 /// Parameters for the `insert_album` query.
 ///
-/// # SQL
+/// # SQL Template
 ///
+/// ```sql
 /// insert into album (name, released, format, recording)
 /// values ($name, $released, $format, $recording)
 /// returning id
+/// ```
 ///
-/// # Source
+/// # Source Path
 ///
 /// `./queries/insert_album.sql`
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct Input {
-/// Maps to `name`.
-pub name: String,
-/// Maps to `released`.
-pub released: chrono::NaiveDate,
-/// Maps to `format`.
-pub format: crate::types::AlbumFormat,
-/// Maps to `recording`.
-pub recording: crate::types::RecordingInfo,
-
+    /// Maps to `$name` in the template.
+    pub name: String,
+    /// Maps to `$released` in the template.
+    pub released: chrono::NaiveDate,
+    /// Maps to `$format` in the template.
+    pub format: crate::types::AlbumFormat,
+    /// Maps to `$recording` in the template.
+    pub recording: crate::types::RecordingInfo,
 }
 
-impl Input {
-    pub fn params(&self) -> Vec<&(dyn postgres_types::ToSql + Sync)> {
-        vec![&self.name, &self.released, &self.format, &self.recording]
-    }
-}
-
-/// Output type: exactly one row.
+/// Result of the statement parameterised by [`Input`].
 pub type Output = OutputRow;
 
-/// Row of the output.
-#[derive(Debug, Clone)]
+/// Row of [`Output`].
+#[derive(Debug, Clone, PartialEq)]
 pub struct OutputRow {
-/// Maps to `id`.
-pub id: i64,
+    /// Maps to the `id` result set column.
+    pub id: i64,
 }
 
-impl OutputRow {
-    pub fn from_row(row: &tokio_postgres::Row) -> Self {
-        Self {
-            id: row.get("id"),
+
+impl crate::mapping::Statement for Input {
+    type Result = Output;
+
+    const RETURNS_ROWS: bool = true;
+
+    const SQL: &str = "insert into album (name, released, format, recording)\n\
+values ($1, $2, $3, $4)\n\
+returning id";
+
+    const PARAM_TYPES: &'static [tokio_postgres::types::Type] = &[Type::TEXT, Type::DATE, Type::UNKNOWN, Type::UNKNOWN];
+
+    #[allow(refining_impl_trait)]
+    fn encode_params(
+        &self,
+    ) -> [&(dyn tokio_postgres::types::ToSql + Sync); Self::PARAM_TYPES.len()] {
+        [&self.name, &self.released, &self.format, &self.recording]
+    }
+
+    fn decode_result(
+        rows: Vec<tokio_postgres::Row>,
+        _affected_rows: u64,
+    ) -> Result<Self::Result, crate::mapping::DecodingError> {
+        match rows.len() {
+            0 => Err(crate::mapping::DecodingError::UnexpectedAmountOfRows {
+                expected: 1,
+                actual: 0,
+            }),
+            1 => {
+                let row = rows.first().unwrap();
+                Ok(OutputRow {
+                    id: crate::mapping::decode_cell(row, 0, 0)?,
+                })
+            }
+            n => Err(crate::mapping::DecodingError::UnexpectedAmountOfRows {
+                expected: 1,
+                actual: n,
+            }),
         }
     }
 }
-
-
-impl crate::Statement for Input {
-    type Output = Output;
-
-    fn sql() -> &'static str {
-        SQL
-    }
-
-    fn params(&self) -> Vec<&(dyn postgres_types::ToSql + Sync)> {
-        self.params()
-    }
-
-    fn decode(rows: Vec<tokio_postgres::Row>, _rows_affected: u64) -> Self::Output {
-        let row = rows.into_iter().next().expect("expected exactly one row");
-        OutputRow::from_row(&row)
-    }
-}
-

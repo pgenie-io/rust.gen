@@ -14,6 +14,7 @@ let Input = Model.CustomType
 
 let Output =
       { moduleName : Text
+      , typeName : Text
       , modulePath : Text
       , moduleContent : Text
       }
@@ -47,6 +48,7 @@ in  Algebra.module
                               Output
                               ( \(members : List MemberGen.Output) ->
                                   { moduleName
+                                  , typeName
                                   , modulePath
                                   , moduleContent =
                                       Templates.CustomCompositeTypeModule.run
@@ -75,6 +77,7 @@ in  Algebra.module
                       Sdk.Compiled.ok
                         Output
                         { moduleName
+                        , typeName
                         , modulePath
                         , moduleContent =
                             Templates.CustomEnumTypeModule.run
