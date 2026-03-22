@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use my_space_music_catalogue::mapping::Statement;
 use my_space_music_catalogue::statements;
 use testcontainers::runners::AsyncRunner as _;
@@ -36,7 +38,13 @@ async fn setup_pool() -> (
 }
 
 async fn apply_migrations(host_port: u16) {
-    const MIGRATIONS: &[(&str, &str)] = &[];
+    const MIGRATIONS: &[(&str, &str)] = &[
+        ("1.sql", include_str!("../migrations/1.sql")),
+        ("2.sql", include_str!("../migrations/2.sql")),
+        ("3.sql", include_str!("../migrations/3.sql")),
+        ("4.sql", include_str!("../migrations/4.sql")),
+        ("5.sql", include_str!("../migrations/5.sql")),
+    ];
 
     let (client, conn) = tokio_postgres::connect(
         &format!(
@@ -67,45 +75,55 @@ async fn execute_preparing<S: my_space_music_catalogue::mapping::Statement>(
     statement: &S,
 ) -> Result<S::Result, String> {
     let params = statement.encode_params();
-    let client = pool.get().await.map_err(|e| e.to_string())?;
+    let client = pool
+        .get()
+        .await
+        .map_err(|e| format!("Pool get: {}", e.to_string()))?;
     let prepared = client
         .prepare_typed_cached(S::SQL, S::PARAM_TYPES)
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| {
+            format!(
+                "Preparation error: {}\nSource: {}",
+                e.to_string(),
+                e.source()
+                    .map_or("unknown".into(), |source| source.to_string())
+            )
+        })?;
     if S::RETURNS_ROWS {
         let rows = client
             .query(&prepared, params.as_ref())
             .await
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| format!("Query: {}", e.to_string()))?;
         let affected = rows.len() as u64;
-        S::decode_result(rows, affected).map_err(|e| e.to_string())
+        S::decode_result(rows, affected).map_err(|e| format!("Decoding: {}", e.to_string()))
     } else {
         let affected = client
             .execute(&prepared, params.as_ref())
             .await
-            .map_err(|e| e.to_string())?;
-        S::decode_result(vec![], affected).map_err(|e| e.to_string())
+            .map_err(|e| format!("Execution: {}", e.to_string()))?;
+        S::decode_result(vec![], affected).map_err(|e| format!("Decoding: {}", e.to_string()))
     }
 }
 
-async fn assert_statement_executes<S>(pool: &deadpool_postgres::Pool)
+async fn assert_statement_executes<S>(pool: &deadpool_postgres::Pool, stmt_name: &str)
 where
     S: Statement + Default,
 {
     let statement = S::default();
     execute_preparing(pool, &statement)
         .await
-        .expect("statement should execute successfully");
+        .unwrap_or_else(|e| panic!("Statement {stmt_name} should execute successfully: {e}"));
 }
 
 #[tokio::test]
 async fn all_declared_statements_execute_with_default_values() {
     let (pool, _container) = setup_pool().await;
-    assert_statement_executes::<my_space_music_catalogue::statements::insert_album::Input>(&pool).await;
-    assert_statement_executes::<my_space_music_catalogue::statements::select_album_by_format::Input>(&pool).await;
-    assert_statement_executes::<my_space_music_catalogue::statements::select_album_by_name::Input>(&pool).await;
-    assert_statement_executes::<my_space_music_catalogue::statements::select_album_with_tracks::Input>(&pool).await;
-    assert_statement_executes::<my_space_music_catalogue::statements::select_genre_by_artist::Input>(&pool).await;
-    assert_statement_executes::<my_space_music_catalogue::statements::update_album_recording_returning::Input>(&pool).await;
-    assert_statement_executes::<my_space_music_catalogue::statements::update_album_released::Input>(&pool).await;
+    assert_statement_executes::<statements::insert_album::Input>(&pool, "insert_album").await;
+    assert_statement_executes::<statements::select_album_by_format::Input>(&pool, "select_album_by_format").await;
+    assert_statement_executes::<statements::select_album_by_name::Input>(&pool, "select_album_by_name").await;
+    assert_statement_executes::<statements::select_album_with_tracks::Input>(&pool, "select_album_with_tracks").await;
+    assert_statement_executes::<statements::select_genre_by_artist::Input>(&pool, "select_genre_by_artist").await;
+    assert_statement_executes::<statements::update_album_recording_returning::Input>(&pool, "update_album_recording_returning").await;
+    assert_statement_executes::<statements::update_album_released::Input>(&pool, "update_album_released").await;
 }

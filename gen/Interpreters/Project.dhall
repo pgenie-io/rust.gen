@@ -45,6 +45,18 @@ let combineOutputs =
                 )
                 queries
 
+        let migrationFiles
+            : List Sdk.File.Type
+            = Deps.Prelude.List.map
+                { name : Text, sql : Text }
+                Sdk.File.Type
+                ( \(migration : { name : Text, sql : Text }) ->
+                    { path = "migrations/${migration.name}.sql"
+                    , content = migration.sql
+                    }
+                )
+                input.migrations
+
         let typeModNames =
               Deps.Prelude.Text.concatMapSep
                 "\n"
@@ -228,15 +240,27 @@ let combineOutputs =
                 "\n"
                 QueryGen.Output
                 ( \(query : QueryGen.Output) ->
-                    "    assert_statement_executes::<${crateName}::statements::${query.statementModuleName}::Input>(&pool).await;"
+                    "    assert_statement_executes::<statements::${query.statementModuleName}::Input>(&pool, \"${query.statementModuleName}\").await;"
                 )
                 queries
+
+        let migrationEntries
+            : Text
+            = Deps.Prelude.Text.concatMapSep
+                "\n"
+                { name : Text, sql : Text }
+                ( \(migration : { name : Text, sql : Text }) ->
+                    "        (\"${migration.name}.sql\", include_str!(\"../migrations/${migration.name}.sql\")),"
+                )
+                input.migrations
 
         let testsRs
             : Sdk.File.Type
             = { path = "tests/tests.rs"
               , content =
                   ''
+                  use std::error::Error;
+
                   use ${crateName}::mapping::Statement;
                   use ${crateName}::statements;
                   use testcontainers::runners::AsyncRunner as _;
@@ -275,7 +299,9 @@ let combineOutputs =
                   }
 
                   async fn apply_migrations(host_port: u16) {
-                      const MIGRATIONS: &[(&str, &str)] = &[];
+                      const MIGRATIONS: &[(&str, &str)] = &[
+                  ${migrationEntries}
+                      ];
 
                       let (client, conn) = tokio_postgres::connect(
                           &format!(
@@ -306,35 +332,45 @@ let combineOutputs =
                       statement: &S,
                   ) -> Result<S::Result, String> {
                       let params = statement.encode_params();
-                      let client = pool.get().await.map_err(|e| e.to_string())?;
+                      let client = pool
+                          .get()
+                          .await
+                          .map_err(|e| format!("Pool get: {}", e.to_string()))?;
                       let prepared = client
                           .prepare_typed_cached(S::SQL, S::PARAM_TYPES)
                           .await
-                          .map_err(|e| e.to_string())?;
+                          .map_err(|e| {
+                              format!(
+                                  "Preparation error: {}\nSource: {}",
+                                  e.to_string(),
+                                  e.source()
+                                      .map_or("unknown".into(), |source| source.to_string())
+                              )
+                          })?;
                       if S::RETURNS_ROWS {
                           let rows = client
                               .query(&prepared, params.as_ref())
                               .await
-                              .map_err(|e| e.to_string())?;
+                              .map_err(|e| format!("Query: {}", e.to_string()))?;
                           let affected = rows.len() as u64;
-                          S::decode_result(rows, affected).map_err(|e| e.to_string())
+                          S::decode_result(rows, affected).map_err(|e| format!("Decoding: {}", e.to_string()))
                       } else {
                           let affected = client
                               .execute(&prepared, params.as_ref())
                               .await
-                              .map_err(|e| e.to_string())?;
-                          S::decode_result(vec![], affected).map_err(|e| e.to_string())
+                              .map_err(|e| format!("Execution: {}", e.to_string()))?;
+                          S::decode_result(vec![], affected).map_err(|e| format!("Decoding: {}", e.to_string()))
                       }
                   }
 
-                  async fn assert_statement_executes<S>(pool: &deadpool_postgres::Pool)
+                  async fn assert_statement_executes<S>(pool: &deadpool_postgres::Pool, stmt_name: &str)
                   where
                       S: Statement + Default,
                   {
                       let statement = S::default();
                       execute_preparing(pool, &statement)
                           .await
-                          .expect("statement should execute successfully");
+                          .unwrap_or_else(|e| panic!("Statement {stmt_name} should execute successfully: {e}"));
                   }
 
                   #[tokio::test]
@@ -345,7 +381,8 @@ let combineOutputs =
                   ''
               }
 
-        in      [ cargoToml, libRs, mappingModRs, decodingErrorRs, typesRs, statementsRs, testsRs ]
+          in      [ cargoToml, libRs, mappingModRs, decodingErrorRs, typesRs, statementsRs, testsRs ]
+              # migrationFiles
               # customTypeFiles
               # statementFiles
             : List Sdk.File.Type
