@@ -38,7 +38,7 @@ let run =
                       ++  "    const RETURNS_ROWS: bool = false;\n"
                       ++  "\n"
                       ++  "    const SQL: &str = "
-                      ++  ctx.sqlExp
+                      ++  Deps.Lude.Extensions.Text.indent 23 ctx.sqlExp
                       ++  ";\n"
                       ++  "\n"
                       ++  "    const PARAM_TYPES: &'static [tokio_postgres::types::Type] = &["

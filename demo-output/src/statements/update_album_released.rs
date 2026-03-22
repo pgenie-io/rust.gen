@@ -32,8 +32,8 @@ impl crate::mapping::Statement for Input {
     const RETURNS_ROWS: bool = false;
 
     const SQL: &str = "update album\n\
-set released = $1\n\
-where id = $2";
+                       set released = $1\n\
+                       where id = $2";
 
     const PARAM_TYPES: &'static [tokio_postgres::types::Type] = &[Type::DATE, Type::INT8];
 

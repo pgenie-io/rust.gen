@@ -49,13 +49,13 @@ impl crate::mapping::Statement for Input {
     const RETURNS_ROWS: bool = true;
 
     const SQL: &str = "select\n\
-  id,\n\
-  name,\n\
-  released,\n\
-  format,\n\
-  recording\n\
-from album\n\
-where format = $1::public.album_format";
+                         id,\n\
+                         name,\n\
+                         released,\n\
+                         format,\n\
+                         recording\n\
+                       from album\n\
+                       where format = $1::public.album_format";
 
     const PARAM_TYPES: &'static [tokio_postgres::types::Type] = &[Type::UNKNOWN];
 

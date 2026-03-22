@@ -52,10 +52,10 @@ impl crate::mapping::Statement for Input {
     const RETURNS_ROWS: bool = true;
 
     const SQL: &str = "-- Update album recording information\n\
-update album\n\
-set recording = $1::public.recording_info\n\
-where id = $2\n\
-returning *";
+                       update album\n\
+                       set recording = $1::public.recording_info\n\
+                       where id = $2\n\
+                       returning *";
 
     const PARAM_TYPES: &'static [tokio_postgres::types::Type] = &[Type::UNKNOWN, Type::INT8];
 

@@ -40,10 +40,10 @@ impl crate::mapping::Statement for Input {
     const RETURNS_ROWS: bool = true;
 
     const SQL: &str = "select id, genre.name\n\
-from genre\n\
-left join album_genre on album_genre.genre = genre.id\n\
-left join album_artist on album_artist.album = album_genre.album\n\
-where album_artist.artist = $1";
+                       from genre\n\
+                       left join album_genre on album_genre.genre = genre.id\n\
+                       left join album_artist on album_artist.album = album_genre.album\n\
+                       where album_artist.artist = $1";
 
     const PARAM_TYPES: &'static [tokio_postgres::types::Type] = &[Type::INT4];
 

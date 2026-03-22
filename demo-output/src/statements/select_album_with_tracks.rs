@@ -42,8 +42,8 @@ impl crate::mapping::Statement for Input {
     const RETURNS_ROWS: bool = true;
 
     const SQL: &str = "select id, name, tracks, disc\n\
-from album\n\
-where id = $1";
+                       from album\n\
+                       where id = $1";
 
     const PARAM_TYPES: &'static [tokio_postgres::types::Type] = &[Type::INT8];
 
