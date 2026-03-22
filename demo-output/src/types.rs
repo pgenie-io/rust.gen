@@ -1,3 +1,5 @@
+//! PostgreSQL enum and composite type mappings.
+
 pub mod album_format;
 pub mod recording_info;
 

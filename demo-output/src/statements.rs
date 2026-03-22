@@ -1,8 +1,6 @@
 //! Mappings to all queries in the project.
 //!
 //! Each sub-module exposes a parameter struct that implements [`crate::mapping::Statement`].
-//! Call [`crate::mapping::Statement::execute`] with a [`tokio_postgres::Client`] to run
-//! the query and receive the corresponding result type.
 
 pub mod insert_album;
 pub mod select_album_by_format;
