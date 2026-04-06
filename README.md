@@ -141,7 +141,7 @@ artifacts:
 Run the code generator:
 
 ```bash
-pgenie generate
+pgn generate
 ```
 
 The generated crate will be placed in `artifacts/rust/`.
