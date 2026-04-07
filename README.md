@@ -22,12 +22,8 @@ The plugin produces a self-contained Rust crate containing:
 
 ## Supported PostgreSQL types
 
-Following is a summary of the associations between PostgreSQL types as defined in the
-[gen-sdk `Project.dhall`](https://github.com/pgenie-io/gen-sdk/blob/v0.1.0/dhall/Project.dhall#L10-L127)
-and their Rust equivalents, using the
-[`postgres-types`](https://docs.rs/postgres-types/latest/postgres_types/) crate's
-[`ToSql`](https://docs.rs/postgres-types/latest/postgres_types/trait.ToSql.html) and
-[`FromSql`](https://docs.rs/postgres-types/latest/postgres_types/trait.FromSql.html) trait implementations.
+Following is a summary of the supported PostgreSQL types and their Rust equivalents, using the
+[`postgres-types`](https://docs.rs/postgres-types/latest/postgres_types/) crate.
 
 ### Supported Types
 
