@@ -10,7 +10,8 @@ let Scalar = ./Scalar.dhall
 
 let Input = Model.Value
 
-let Output = { sig : Text, pgType : Text, pgCastSuffix : Text }
+let Output =
+      { sig : Text, pgType : Text, pgCastSuffix : Text, hasKnownPgType : Bool }
 
 let Result = Sdk.Compiled.Type Output
 
@@ -38,11 +39,25 @@ let run =
                             (\(inner : Text) -> "Vec<${inner}>")
                             elementSig
 
+                    let arrayPgType =
+                          if    scalar.hasKnownPgType
+                          then  scalar.pgType ++ "_ARRAY"
+                          else  scalar.pgType
+
+                    let arrayPgCastSuffix =
+                          if    scalar.hasKnownPgType
+                          then  ""
+                          else      scalar.pgCastSuffix
+                                ++  Deps.Prelude.Text.replicate
+                                      arraySettings.dimensionality
+                                      "[]"
+
                     in  Sdk.Compiled.ok
                           Output
                           { sig = arraySig
-                          , pgType = scalar.pgType
-                          , pgCastSuffix = scalar.pgCastSuffix
+                          , pgType = arrayPgType
+                          , pgCastSuffix = arrayPgCastSuffix
+                          , hasKnownPgType = scalar.hasKnownPgType
                           }
                 )
                 ( Sdk.Compiled.ok
@@ -50,6 +65,7 @@ let run =
                     { sig = scalar.sig
                     , pgType = scalar.pgType
                     , pgCastSuffix = scalar.pgCastSuffix
+                    , hasKnownPgType = scalar.hasKnownPgType
                     }
                 )
           )

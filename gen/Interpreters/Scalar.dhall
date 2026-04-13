@@ -10,7 +10,8 @@ let Primitive = ./Primitive.dhall
 
 let Input = Model.Scalar
 
-let Output = { sig : Text, pgType : Text, pgCastSuffix : Text }
+let Output =
+      { sig : Text, pgType : Text, pgCastSuffix : Text, hasKnownPgType : Bool }
 
 let run =
       \(config : Algebra.Config) ->
@@ -22,7 +23,11 @@ let run =
                   Primitive.Output
                   Output
                   ( \(p : Primitive.Output) ->
-                      { sig = p.sig, pgType = p.pgType, pgCastSuffix = "" }
+                      { sig = p.sig
+                      , pgType = p.pgType
+                      , pgCastSuffix = ""
+                      , hasKnownPgType = True
+                      }
                   )
                   (Primitive.run config primitive)
           , Custom =
@@ -36,6 +41,7 @@ let run =
                                              name}"
                       , pgType = "Type::UNKNOWN"
                       , pgCastSuffix = "::public.${pgName}"
+                      , hasKnownPgType = False
                       }
           }
           input
