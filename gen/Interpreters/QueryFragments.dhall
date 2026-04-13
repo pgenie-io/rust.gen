@@ -20,7 +20,11 @@ let escapeRustString
         Text
         [ Prelude.Text.replace "\\" "\\\\"
         , Prelude.Text.replace "\"" "\\\""
-        , Prelude.Text.replace "\n" ("\\n\\\n")
+        , Prelude.Text.replace
+            "\n"
+            ''
+            \n\
+            ''
         ]
 
 let renderSqlExp
@@ -38,12 +42,16 @@ let renderSqlExp
                           let suffix =
                                 Prelude.Optional.fold
                                   Text
-                                  (Prelude.List.index var.paramIndex Text castSuffixes)
+                                  ( Prelude.List.index
+                                      var.paramIndex
+                                      Text
+                                      castSuffixes
+                                  )
                                   Text
                                   (\(s : Text) -> s)
                                   ""
 
-                          in  "\$"
+                          in      "\$"
                               ++  Deps.Prelude.Natural.show (var.paramIndex + 1)
                               ++  suffix
                     }

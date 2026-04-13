@@ -33,7 +33,10 @@ let run =
           , Daterange = unsupportedType "daterange"
           , Float4 = std "f32" "Type::FLOAT4"
           , Float8 = std "f64" "Type::FLOAT8"
-          , Hstore = std "std::collections::HashMap<String, Option<String>>" "Type::TEXT"
+          , Hstore =
+              std
+                "std::collections::HashMap<String, Option<String>>"
+                "Type::TEXT"
           , Inet = std "cidr::IpInet" "Type::INET"
           , Int2 = std "i16" "Type::INT2"
           , Int4 = std "i32" "Type::INT4"
@@ -63,7 +66,8 @@ let run =
           , Text = std "String" "Type::TEXT"
           , Time = std "chrono::NaiveTime" "Type::TIME"
           , Timestamp = std "chrono::NaiveDateTime" "Type::TIMESTAMP"
-          , Timestamptz = std "chrono::DateTime<chrono::Utc>" "Type::TIMESTAMPTZ"
+          , Timestamptz =
+              std "chrono::DateTime<chrono::Utc>" "Type::TIMESTAMPTZ"
           , Timetz = unsupportedType "timetz"
           , Tsmultirange = unsupportedType "tsmultirange"
           , Tsquery = unsupportedType "tsquery"
@@ -75,6 +79,11 @@ let run =
           , Varbit = std "bit_vec::BitVec" "Type::VARBIT"
           , Varchar = std "String" "Type::VARCHAR"
           , Xml = unsupportedType "xml"
+          , Box2D = unsupportedType "box2d"
+          , Box3D = unsupportedType "box3d"
+          , Geography = unsupportedType "geography"
+          , Geometry = unsupportedType "geometry"
+          , Ltree = unsupportedType "ltree"
           }
           input
 

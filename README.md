@@ -73,31 +73,36 @@ produce warnings and be skipped during generation.
 
 | PostgreSQL Type     | Reason                                                                 |
 |---------------------|------------------------------------------------------------------------|
-| `circle`            | No `ToSql`/`FromSql` impl in `postgres-types`                         |
+| `circle`            | No `ToSql`/`FromSql` impl in `postgres-types`                          |
 | `datemultirange`    | Multirange types not supported by `postgres-types`                     |
 | `daterange`         | Range types not supported by `postgres-types`                          |
 | `int4multirange`    | Multirange types not supported by `postgres-types`                     |
 | `int4range`         | Range types not supported by `postgres-types`                          |
 | `int8multirange`    | Multirange types not supported by `postgres-types`                     |
 | `int8range`         | Range types not supported by `postgres-types`                          |
-| `interval`          | No direct `ToSql`/`FromSql` impl in `postgres-types`                  |
-| `line`              | No `ToSql`/`FromSql` impl in `postgres-types`                         |
-| `lseg`              | No `ToSql`/`FromSql` impl in `postgres-types`                         |
-| `macaddr8`          | `eui48` crate only supports 6-byte MAC (EUI-48), not 8-byte (EUI-64)  |
-| `money`             | No `ToSql`/`FromSql` impl in `postgres-types`                         |
+| `interval`          | No direct `ToSql`/`FromSql` impl in `postgres-types`                   |
+| `line`              | No `ToSql`/`FromSql` impl in `postgres-types`                          |
+| `lseg`              | No `ToSql`/`FromSql` impl in `postgres-types`                          |
+| `macaddr8`          | `eui48` crate only supports 6-byte MAC (EUI-48), not 8-byte (EUI-64)   |
+| `money`             | No `ToSql`/`FromSql` impl in `postgres-types`                          |
 | `nummultirange`     | Multirange types not supported by `postgres-types`                     |
 | `numrange`          | Range types not supported by `postgres-types`                          |
-| `pg_lsn`            | No `ToSql`/`FromSql` impl in `postgres-types`                         |
-| `pg_snapshot`       | No `ToSql`/`FromSql` impl in `postgres-types`                         |
-| `polygon`           | No `ToSql`/`FromSql` impl in `postgres-types`                         |
-| `timetz`            | No `ToSql`/`FromSql` impl in `postgres-types`                         |
+| `pg_lsn`            | No `ToSql`/`FromSql` impl in `postgres-types`                          |
+| `pg_snapshot`       | No `ToSql`/`FromSql` impl in `postgres-types`                          |
+| `polygon`           | No `ToSql`/`FromSql` impl in `postgres-types`                          |
+| `timetz`            | No `ToSql`/`FromSql` impl in `postgres-types`                          |
 | `tsmultirange`      | Multirange types not supported by `postgres-types`                     |
-| `tsquery`           | No `ToSql`/`FromSql` impl in `postgres-types`                         |
+| `tsquery`           | No `ToSql`/`FromSql` impl in `postgres-types`                          |
 | `tsrange`           | Range types not supported by `postgres-types`                          |
 | `tstzmultirange`    | Multirange types not supported by `postgres-types`                     |
 | `tstzrange`         | Range types not supported by `postgres-types`                          |
-| `tsvector`          | No `ToSql`/`FromSql` impl in `postgres-types`                         |
-| `xml`               | No `ToSql`/`FromSql` impl in `postgres-types`                         |
+| `tsvector`          | No `ToSql`/`FromSql` impl in `postgres-types`                          |
+| `xml`               | No `ToSql`/`FromSql` impl in `postgres-types`                          |
+| `box2d`             | No `ToSql`/`FromSql` impl in `postgres-types`                          |
+| `box3d`             | No `ToSql`/`FromSql` impl in `postgres-types`                          |
+| `geography`         | No `ToSql`/`FromSql` impl in `postgres-types`                          |
+| `geometry`          | No `ToSql`/`FromSql` impl in `postgres-types`                          |
+| `ltree`             | No `ToSql`/`FromSql` impl in `postgres-types`                          |
 
 ### Notes
 
@@ -131,7 +136,7 @@ space: my_space
 name: music_catalogue
 version: 1.0.0
 artifacts:
-  rust: https://raw.githubusercontent.com/pgenie-io/rust.gen/v0.1.0/gen/Gen.dhall
+  rust: https://raw.githubusercontent.com/pgenie-io/rust.gen/v0.1.1/gen/Gen.dhall
 ```
 
 Run the code generator:

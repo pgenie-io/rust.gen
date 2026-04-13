@@ -30,11 +30,9 @@ let render =
       \(result : ResultModule.Output) ->
       \(fragments : QueryFragmentsModule.Output) ->
       \(params : List MemberModule.Output) ->
-        let statementModuleName =
-              Deps.CodegenKit.Name.toTextInSnake input.name
+        let statementModuleName = Deps.CodegenKit.Name.toTextInSnake input.name
 
-        let statementModulePath =
-              "src/statements/${statementModuleName}.rs"
+        let statementModulePath = "src/statements/${statementModuleName}.rs"
 
         let queryName = Deps.CodegenKit.Name.toTextInSnake input.name
 
@@ -61,26 +59,31 @@ let render =
                 (\(member : MemberModule.Output) -> member.pgCastSuffix)
                 params
 
-        let result = result { sqlExp = fragments.mkSqlExp paramCastSuffixes, paramTypes = paramTypesText, paramExprs } typeName
+        let result =
+              result
+                { sqlExp = fragments.mkSqlExp paramCastSuffixes
+                , paramTypes = paramTypesText
+                , paramExprs
+                }
+                typeName
 
         let paramFields =
               Deps.Prelude.Text.concatMapSep
                 "\n"
                 MemberModule.Output
-                (\(member : MemberModule.Output) -> member.paramFieldDeclaration)
+                ( \(member : MemberModule.Output) ->
+                    member.paramFieldDeclaration
+                )
                 params
 
         let sqlDocLines =
-              "/// "
-              ++ Deps.Lude.Extensions.Text.prefixEachLine
-                   "/// "
-                   fragments.docComment
+                  "/// "
+              ++  Deps.Lude.Extensions.Text.prefixEachLine
+                    "/// "
+                    fragments.docComment
 
         let hasParams =
-              Deps.Prelude.List.null
-                MemberModule.Output
-                params
-                == False
+              Deps.Prelude.List.null MemberModule.Output params == False
 
         let statementModuleContents =
               Templates.StatementModule.run

@@ -87,7 +87,8 @@ let combineOutputs =
         let libRs
             : Sdk.File.Type
             = { path = "src/lib.rs"
-              , content = Templates.LibRs.run { rootModuleName = config.rootModuleName }
+              , content =
+                  Templates.LibRs.run { rootModuleName = config.rootModuleName }
               }
 
         let packageName =
@@ -381,7 +382,14 @@ let combineOutputs =
                   ''
               }
 
-          in      [ cargoToml, libRs, mappingModRs, decodingErrorRs, typesRs, statementsRs, testsRs ]
+        in      [ cargoToml
+                , libRs
+                , mappingModRs
+                , decodingErrorRs
+                , typesRs
+                , statementsRs
+                , testsRs
+                ]
               # migrationFiles
               # customTypeFiles
               # statementFiles

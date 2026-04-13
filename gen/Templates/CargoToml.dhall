@@ -1,10 +1,6 @@
 let Algebra = ./Algebra/package.dhall
 
-let Params =
-      { packageName : Text
-      , version : Text
-      , dbName : Text
-      }
+let Params = { packageName : Text, version : Text, dbName : Text }
 
 in  Algebra.module
       Params

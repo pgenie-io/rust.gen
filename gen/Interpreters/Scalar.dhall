@@ -32,7 +32,8 @@ let run =
                 in  Sdk.Compiled.ok
                       Output
                       { sig =
-                          "crate::types::${Deps.CodegenKit.Name.toTextInPascal name}"
+                          "crate::types::${Deps.CodegenKit.Name.toTextInPascal
+                                             name}"
                       , pgType = "Type::UNKNOWN"
                       , pgCastSuffix = "::public.${pgName}"
                       }

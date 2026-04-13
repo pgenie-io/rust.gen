@@ -34,8 +34,7 @@ let run =
 
               let sig = value.sig
 
-              let fieldType =
-                    if input.isNullable then "Option<${sig}>" else sig
+              let fieldType = if input.isNullable then "Option<${sig}>" else sig
 
               let indent = "    "
 
@@ -43,7 +42,9 @@ let run =
                         indent
                     ++  "/// Maps to `"
                     ++  input.pgName
-                    ++  "`.\n"
+                    ++  ''
+                        `.
+                        ''
                     ++  indent
                     ++  "pub "
                     ++  fieldName
@@ -55,7 +56,9 @@ let run =
                         indent
                     ++  "/// Maps to `\$"
                     ++  input.pgName
-                    ++  "` in the template.\n"
+                    ++  ''
+                        ` in the template.
+                        ''
                     ++  indent
                     ++  "pub "
                     ++  fieldName
@@ -67,7 +70,9 @@ let run =
                         indent
                     ++  "/// Maps to the `"
                     ++  input.pgName
-                    ++  "` result set column.\n"
+                    ++  ''
+                        ` result set column.
+                        ''
                     ++  indent
                     ++  "pub "
                     ++  fieldName
