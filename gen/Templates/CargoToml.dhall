@@ -37,6 +37,8 @@ in  Algebra.module
           eui48 = "1"
           geo-types = "0.7"
           rust_decimal = { version = "1", features = ["db-postgres"] }
+          serde_json = "1"
+          uuid = "1"
 
           [dev-dependencies]
           deadpool-postgres = "0.14.1"

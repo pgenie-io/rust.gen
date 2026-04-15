@@ -18,18 +18,7 @@ let run =
       \(input : Input) ->
         merge
           { Primitive =
-              \(primitive : Model.Primitive) ->
-                Sdk.Compiled.map
-                  Primitive.Output
-                  Output
-                  ( \(p : Primitive.Output) ->
-                      { sig = p.sig
-                      , pgType = p.pgType
-                      , pgCastSuffix = ""
-                      , hasKnownPgType = True
-                      }
-                  )
-                  (Primitive.run config primitive)
+              \(primitive : Model.Primitive) -> Primitive.run config primitive
           , Custom =
               \(name : Model.Name) ->
                 let pgName = Deps.CodegenKit.Name.toTextInSnake name

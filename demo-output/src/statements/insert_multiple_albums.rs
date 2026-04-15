@@ -23,11 +23,11 @@ use tokio_postgres::types::Type;
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Input {
     /// Maps to `$name` in the template.
-    pub name: Option<Vec<Option<String>>>,
+    pub name: Vec<String>,
     /// Maps to `$released` in the template.
-    pub released: Option<Vec<Option<chrono::NaiveDate>>>,
+    pub released: Vec<chrono::NaiveDate>,
     /// Maps to `$format` in the template.
-    pub format: Option<Vec<Option<crate::types::AlbumFormat>>>,
+    pub format: Vec<crate::types::AlbumFormat>,
 }
 
 /// Result of the statement parameterised by [`Input`].

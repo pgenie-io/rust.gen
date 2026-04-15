@@ -59,7 +59,7 @@ let run =
                                           }
                                         ) ->
                                             "                    "
-                                        ++  ic.value.fieldName
+                                        ++  ic.value.rustFieldName
                                         ++  ": crate::mapping::decode_cell(row, 0, "
                                         ++  Natural/show ic.index
                                         ++  ")?,"
@@ -79,7 +79,7 @@ let run =
                                           }
                                         ) ->
                                             "                    "
-                                        ++  ic.value.fieldName
+                                        ++  ic.value.rustFieldName
                                         ++  ": crate::mapping::decode_cell(&row, row_index, "
                                         ++  Natural/show ic.index
                                         ++  ")?,"

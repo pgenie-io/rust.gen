@@ -2,6 +2,8 @@ let Deps = ../Deps/package.dhall
 
 let Algebra = ./Algebra/package.dhall
 
+let Rust = ./Rust.dhall
+
 let Sdk = Deps.Sdk
 
 let Model = Deps.Sdk.Project
@@ -12,6 +14,7 @@ let Input = Model.Member
 
 let Output =
       { fieldName : Text
+      , rustFieldName : Text
       , fieldType : Text
       , fieldDeclaration : Text
       , paramFieldDeclaration : Text
@@ -32,6 +35,11 @@ let run =
           ( \(value : Value.Output) ->
               let fieldName = Deps.CodegenKit.Name.toTextInSnake input.name
 
+              let rustFieldName =
+                    if    Rust.isRustKeywordName input.name
+                    then  fieldName ++ "_"
+                    else  fieldName
+
               let sig = value.sig
 
               let fieldType = if input.isNullable then "Option<${sig}>" else sig
@@ -47,7 +55,7 @@ let run =
                         ''
                     ++  indent
                     ++  "pub "
-                    ++  fieldName
+                    ++  rustFieldName
                     ++  ": "
                     ++  fieldType
                     ++  ","
@@ -61,7 +69,7 @@ let run =
                         ''
                     ++  indent
                     ++  "pub "
-                    ++  fieldName
+                    ++  rustFieldName
                     ++  ": "
                     ++  fieldType
                     ++  ","
@@ -75,18 +83,19 @@ let run =
                         ''
                     ++  indent
                     ++  "pub "
-                    ++  fieldName
+                    ++  rustFieldName
                     ++  ": "
                     ++  fieldType
                     ++  ","
 
-              let paramExpr = "&self.${fieldName}"
+              let paramExpr = "&self.${rustFieldName}"
 
               let decoderExpr = "row.get(\"${input.pgName}\")"
 
               in  Sdk.Compiled.ok
                     Output
                     { fieldName
+                    , rustFieldName
                     , fieldType
                     , fieldDeclaration
                     , paramFieldDeclaration
