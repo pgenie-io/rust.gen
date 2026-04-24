@@ -113,13 +113,13 @@ let combineOutputs =
 
         let mappingModRs
             : Sdk.File.Type
-            = { path = "src/mapping/mod.rs"
+            = { path = "src/mapping.rs"
               , content =
                   ''
                   //! Shared PostgreSQL statement mapping primitives.
 
                   mod decoding_error;
-                  pub use decoding_error::{decode_cell, DecodingError};
+                  pub use decoding_error::DecodingError;
 
                   /// Implemented by each query's parameter struct. Provides a uniform way to
                   /// prepare and execute statements against a [`tokio_postgres::Client`].
@@ -142,6 +142,22 @@ let combineOutputs =
                           affected_rows: u64,
                       ) -> Result<Self::Result, DecodingError>;
                   }
+
+                  /// Decode a single result-set cell and attach its row/column location to any
+                  /// PostgreSQL decoding error.
+                  pub fn decode_cell<'a, T: tokio_postgres::types::FromSql<'a>>(
+                      input_row: &'a tokio_postgres::Row,
+                      row_index: usize,
+                      column_index: usize,
+                  ) -> Result<T, DecodingError> {
+                      input_row
+                          .try_get(column_index)
+                          .map_err(|source| DecodingError::Cell {
+                              row: row_index,
+                              column: column_index,
+                              source,
+                          })
+                  }
                   ''
               }
 
@@ -150,8 +166,6 @@ let combineOutputs =
             = { path = "src/mapping/decoding_error.rs"
               , content =
                   ''
-                  use tokio_postgres::{types::FromSql, Row};
-
                   #[derive(Debug)]
                   pub enum DecodingError {
                       UnexpectedAmountOfRows {
@@ -189,22 +203,6 @@ let combineOutputs =
                               DecodingError::UnexpectedAmountOfRows { .. } => None,
                           }
                       }
-                  }
-
-                  /// Decode a single result-set cell and attach its row/column location to any
-                  /// PostgreSQL decoding error.
-                  pub fn decode_cell<'a, T: FromSql<'a>>(
-                      input_row: &'a Row,
-                      row_index: usize,
-                      column_index: usize,
-                  ) -> Result<T, DecodingError> {
-                      input_row
-                          .try_get(column_index)
-                          .map_err(|source| DecodingError::Cell {
-                              row: row_index,
-                              column: column_index,
-                              source,
-                          })
                   }
                   ''
               }

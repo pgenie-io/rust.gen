@@ -7,9 +7,7 @@ A [pGenie](https://github.com/pgenie-io/pgenie) plugin that generates type-safe 
 The plugin produces a self-contained Rust crate containing:
 
 - **`Cargo.toml`** – a ready-to-build library with all required dependencies declared.
-- **`src/mapping/`** – shared PostgreSQL statement mapping primitives:
-  - A `Statement` trait with `SQL`, `PARAM_TYPES`, `RETURNS_ROWS`, `encode_params`, and `decode_result`.
-  - A `DecodingError` enum and `decode_cell` helper for column-indexed result decoding.
+- **`src/mapping.rs`** – shared PostgreSQL statement mapping primitives.
 - **`src/statements/*.rs`** – one module per SQL query. Each module contains:
   - An `Input` parameter struct with a field per query parameter.
   - An `Output` result type alias with a corresponding `OutputRow` type (for row-returning statements).
@@ -57,8 +55,8 @@ elements.
 | `json`              | `serde_json::Value`               | `serde_json` 1    | `with-serde_json-1`               |
 | `jsonb`             | `serde_json::Value`               | `serde_json` 1    | `with-serde_json-1`               |
 | `uuid`              | `uuid::Uuid`                      | `uuid` 1          | `with-uuid-1`                     |
-| `bit`               | `bit_vec::BitVec`                 | `bit-vec` 0.6     | `with-bit-vec-0_6`                |
-| `varbit`            | `bit_vec::BitVec`                 | `bit-vec` 0.6     | `with-bit-vec-0_6`                |
+| `bit`               | `bit_vec::BitVec`                 | `bit-vec` 0.9     | `with-bit-vec-0_9`                |
+| `varbit`            | `bit_vec::BitVec`                 | `bit-vec` 0.9     | `with-bit-vec-0_9`                |
 | `macaddr`           | `eui48::MacAddress`               | `eui48` 1         | `with-eui48-1`                    |
 | `point`             | `geo_types::Point<f64>`           | `geo-types` 0.7   | `with-geo-types-0_7`              |
 | `box`               | `geo_types::Rect<f64>`            | `geo-types` 0.7   | `with-geo-types-0_7`              |

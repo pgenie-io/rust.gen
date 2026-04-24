@@ -14,7 +14,7 @@ in  Algebra.module
 
           [dependencies]
           tokio-postgres = { version = "0.7", features = [
-              "with-bit-vec-0_8",
+              "with-bit-vec-0_9",
               "with-chrono-0_4",
               "with-eui48-1",
               "with-geo-types-0_7",
@@ -23,7 +23,7 @@ in  Algebra.module
           ] }
           postgres-types = { version = "0.2", features = [
               "derive",
-              "with-bit-vec-0_8",
+              "with-bit-vec-0_9",
               "with-chrono-0_4",
               "with-cidr-0_3",
               "with-eui48-1",
@@ -31,7 +31,7 @@ in  Algebra.module
               "with-serde_json-1",
               "with-uuid-1",
           ] }
-          bit-vec = "0.8"
+          bit-vec = "0.9"
           cidr = "0.3"
           chrono = { version = "0.4", default-features = false, features = ["std"] }
           eui48 = "1"
