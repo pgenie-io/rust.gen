@@ -1,3 +1,9 @@
+# Unreleased
+
+## Backwards compatible changes:
+
+- Optional deadpool-postgres integration for generated crates. The mapping layer now exposes `Statement::execute_preparing` and `Statement::execute_without_preparing`, adds a unified `mapping::Error` type, and includes `deadpool-postgres` in generated dependencies when the integration is enabled.
+
 # v0.1.1
 
 ## Fixes:

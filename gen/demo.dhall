@@ -17,9 +17,9 @@ let project = Sdk.Fixtures.Demo
 
 let config
     : Gen.Config
-    = {=}
+    = { deadpool = True }
 
-let compiledFiles = Gen.compile (None Gen.Config) project
+let compiledFiles = Gen.compile (Some { deadpool = True }) project
 
 let compiledFileMap =
       Sdk.Compiled.map

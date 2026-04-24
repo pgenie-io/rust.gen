@@ -1,13 +1,13 @@
 # rust.gen
 
-A [pGenie](https://github.com/pgenie-io/pgenie) plugin that generates type-safe Rust bindings for PostgreSQL using [tokio-postgres](https://crates.io/crates/tokio-postgres).
+A [pGenie](https://github.com/pgenie-io/pgenie) plugin that generates type-safe Rust bindings for PostgreSQL using [tokio-postgres](https://crates.io/crates/tokio-postgres) directly, with optional [deadpool-postgres](https://crates.io/crates/deadpool-postgres) integration.
 
 ## What it generates
 
 The plugin produces a self-contained Rust crate containing:
 
-- **`Cargo.toml`** – a ready-to-build library with all required dependencies declared.
-- **`src/mapping.rs`** – shared PostgreSQL statement mapping primitives.
+- **`Cargo.toml`** – a ready-to-build library with all required dependencies declared, including `deadpool-postgres` when deadpool integration is enabled.
+- **`src/mapping.rs`** and **`src/mapping/error.rs`** – shared PostgreSQL statement mapping primitives plus deadpool-aware execution helpers and error types.
 - **`src/statements/*.rs`** – one module per SQL query. Each module contains:
   - An `Input` parameter struct with a field per query parameter.
   - An `Output` result type alias with a corresponding `OutputRow` type (for row-returning statements).
@@ -134,7 +134,10 @@ space: my_space
 name: music_catalogue
 version: 1.0.0
 artifacts:
-  rust: https://raw.githubusercontent.com/pgenie-io/rust.gen/v0.1.1/gen/Gen.dhall
+  rust:
+    gen: https://raw.githubusercontent.com/pgenie-io/rust.gen/v0.1.1/gen/Gen.dhall
+    config:
+      deadpool: true # Provide deadpool integration with prepared statement caching. `false` by default.
 ```
 
 Run the code generator:
@@ -153,70 +156,41 @@ of preparing statements, binding parameters, and decoding results while still
 keeping the generated API visible.
 
 The example below shows the pattern used in the demo tests: obtain a
-`deadpool_postgres::Pool`, pull a client from the pool, prepare the generated
-statement, and execute it through the generated `Statement` implementation.
+`deadpool_postgres::Pool`, pull a client from the pool, and execute the generated
+statements through the `Statement` helpers.
 
 ```rust
+use chrono::NaiveDate;
 use my_space_music_catalogue::mapping::Statement;
 use my_space_music_catalogue::statements;
 use my_space_music_catalogue::types;
-use chrono::NaiveDate;
 
-async fn execute_preparing<S: Statement>(
+async fn example(
   pool: &deadpool_postgres::Pool,
-  statement: &S,
-) -> Result<S::Result, String> {
-  let params = statement.encode_params();
-  let client = pool
-    .get()
-    .await
-    .map_err(|e| format!("Pool get: {e}"))?;
+) -> Result<(), my_space_music_catalogue::mapping::Error> {
+  let client = pool.get().await?;
 
-  let prepared = client
-    .prepare_typed_cached(S::SQL, S::PARAM_TYPES)
-    .await
-    .map_err(|e| format!("Preparation error: {e}"))?;
-
-  if S::RETURNS_ROWS {
-    let rows = client
-      .query(&prepared, params.as_ref())
-      .await
-      .map_err(|e| format!("Query: {e}"))?;
-    let affected = rows.len() as u64;
-    S::decode_result(rows, affected).map_err(|e| format!("Decoding: {e}"))
-  } else {
-    let affected = client
-      .execute(&prepared, params.as_ref())
-      .await
-      .map_err(|e| format!("Execution: {e}"))?;
-    S::decode_result(Vec::new(), affected).map_err(|e| format!("Decoding: {e}"))
+  let inserted = statements::insert_album::Input {
+    name: "Space Jazz Vol. 1".to_string(),
+    released: NaiveDate::from_ymd_opt(2020, 5, 4).unwrap(),
+    format: types::AlbumFormat::Vinyl,
+    recording: types::RecordingInfo {
+      studio_name: Some("Galactic Studio".to_string()),
+      city: Some("Lunar City".to_string()),
+      country: Some("Moon".to_string()),
+      recorded_date: Some(NaiveDate::from_ymd_opt(2019, 12, 1).unwrap()),
+    },
   }
-}
+  .execute_preparing(&client)
+  .await?;
 
-async fn example(pool: &deadpool_postgres::Pool) -> Result<(), String> {
-  // Insert a real album record.
-  let inserted = execute_preparing(
-      pool,
-      &statements::insert_album::Input {
-        name: "Space Jazz Vol. 1".to_string(),
-        released: NaiveDate::from_ymd_opt(2020, 5, 4).unwrap(),
-        format: types::AlbumFormat::Vinyl,
-        recording: types::RecordingInfo {
-          studio_name: Some("Galactic Studio".to_string()),
-          city: Some("Lunar City".to_string()),
-          country: Some("Moon".to_string()),
-          recorded_date: Some(NaiveDate::from_ymd_opt(2019, 12, 1).unwrap()),
-        },
-      }
-  ).await?;
-  // `insert_album` returns an `OutputRow` containing the new `id`.
   println!("Inserted album id={}", inserted.id);
 
-  // Now query by name to demonstrate reading rows back.
-  let rows = execute_preparing(
-      pool,
-      &statements::select_album_by_name::Input { name: "Space Jazz Vol. 1".to_string() }
-  ).await?;
+  let rows = statements::select_album_by_name::Input {
+    name: "Space Jazz Vol. 1".to_string(),
+  }
+  .execute_without_preparing(&client)
+  .await?;
 
   for row in rows {
     println!(
@@ -229,7 +203,6 @@ async fn example(pool: &deadpool_postgres::Pool) -> Result<(), String> {
 }
 ```
 
-If you are wiring generated bindings into your own project, implement a similar
-utility function around deadpool_postgres. That keeps connection management in one
-place and lets the generated `Statement` trait handle SQL text, parameter encoding,
-and result decoding consistently across all statements.
+Use `execute_preparing` when you want deadpool's prepared-statement cache, and
+`execute_without_preparing` when you need a path that stays compatible with
+proxies that do not support prepared statements.

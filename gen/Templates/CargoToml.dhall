@@ -1,49 +1,57 @@
 let Algebra = ./Algebra/package.dhall
 
-let Params = { packageName : Text, version : Text, dbName : Text }
+let Params =
+      { packageName : Text, version : Text, dbName : Text, deadpool : Bool }
 
 in  Algebra.module
       Params
       ( \(params : Params) ->
-          ''
-          [package]
-          name = "${params.packageName}"
-          version = "${params.version}"
-          edition = "2021"
-          description = "Type-safe mapping to the ${params.dbName} database"
+          let deadpoolDep =
+                if    params.deadpool
+                then  ''
+                      deadpool-postgres = "0.14.1"
+                      ''
+                else  ""
 
-          [dependencies]
-          tokio-postgres = { version = "0.7", features = [
-              "with-bit-vec-0_9",
-              "with-chrono-0_4",
-              "with-eui48-1",
-              "with-geo-types-0_7",
-              "with-serde_json-1",
-              "with-uuid-1",
-          ] }
-          postgres-types = { version = "0.2", features = [
-              "derive",
-              "with-bit-vec-0_9",
-              "with-chrono-0_4",
-              "with-cidr-0_3",
-              "with-eui48-1",
-              "with-geo-types-0_7",
-              "with-serde_json-1",
-              "with-uuid-1",
-          ] }
-          bit-vec = "0.9"
-          cidr = "0.3"
-          chrono = { version = "0.4", default-features = false, features = ["std"] }
-          eui48 = "1"
-          geo-types = "0.7"
-          rust_decimal = { version = "1", features = ["db-postgres"] }
-          serde_json = "1"
-          uuid = "1"
+          in  ''
+              [package]
+              name = "${params.packageName}"
+              version = "${params.version}"
+              edition = "2021"
+              description = "Type-safe mapping to the ${params.dbName} database"
 
-          [dev-dependencies]
-          deadpool-postgres = "0.14.1"
-          tokio = { version = "1", features = ["full"] }
-          testcontainers = "0.27.1"
-          testcontainers-modules = { version = "0.15", features = ["postgres"] }
-          ''
+              [dependencies]
+              tokio-postgres = { version = "0.7", features = [
+                  "with-bit-vec-0_9",
+                  "with-chrono-0_4",
+                  "with-eui48-1",
+                  "with-geo-types-0_7",
+                  "with-serde_json-1",
+                  "with-uuid-1",
+              ] }
+              postgres-types = { version = "0.2", features = [
+                  "derive",
+                  "with-bit-vec-0_9",
+                  "with-chrono-0_4",
+                  "with-cidr-0_3",
+                  "with-eui48-1",
+                  "with-geo-types-0_7",
+                  "with-serde_json-1",
+                  "with-uuid-1",
+              ] }
+              bit-vec = "0.9"
+              cidr = "0.3"
+              chrono = { version = "0.4", default-features = false, features = ["std"] }
+              ${deadpoolDep}eui48 = "1"
+              geo-types = "0.7"
+              rust_decimal = { version = "1", features = ["db-postgres"] }
+              serde_json = "1"
+              uuid = "1"
+
+              [dev-dependencies]
+              deadpool-postgres = "0.14.1"
+              tokio = { version = "1", features = ["full"] }
+              testcontainers = "0.27.1"
+              testcontainers-modules = { version = "0.15", features = ["postgres"] }
+              ''
       )
