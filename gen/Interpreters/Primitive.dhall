@@ -1,6 +1,6 @@
 let Deps = ../Deps/package.dhall
 
-let Algebra = ./Algebra/package.dhall
+let Algebra = ../Algebras/package.dhall
 
 let Input = Deps.Sdk.Project.Primitive
 
@@ -29,7 +29,7 @@ let inferred =
           }
 
 let run =
-      \(config : Algebra.Config) ->
+      \(config : Algebra.Interpreter.Config) ->
       \(input : Input) ->
         merge
           { Bit = known "bit_vec::BitVec" "Type::BIT"
@@ -98,4 +98,4 @@ let run =
           }
           input
 
-in  Algebra.module Input Output run
+in  Algebra.Interpreter.module Input Output run

@@ -1,6 +1,6 @@
 let Deps = ../Deps/package.dhall
 
-let Algebra = ./Algebra/package.dhall
+let Algebra = ../Algebras/package.dhall
 
 let Rust = ./Rust.dhall
 
@@ -14,51 +14,34 @@ let Input = Model.Member
 
 let Output =
       { fieldName : Text
-      , rustFieldName : Text
       , fieldType : Text
-      , fieldDeclaration : Text
       , paramFieldDeclaration : Text
       , columnFieldDeclaration : Text
       , pgName : Text
       , paramExpr : Text
-      , decoderExpr : Text
       , pgType : Text
       , pgCastSuffix : Text
       }
 
 let run =
-      \(config : Algebra.Config) ->
+      \(config : Algebra.Interpreter.Config) ->
       \(input : Input) ->
         Sdk.Compiled.flatMap
           Value.Output
           Output
           ( \(value : Value.Output) ->
-              let fieldName = Deps.CodegenKit.Name.toTextInSnake input.name
+              let rawFieldName = Deps.CodegenKit.Name.toTextInSnake input.name
 
-              let rustFieldName =
+              let fieldName =
                     if    Rust.isRustKeywordName input.name
-                    then  fieldName ++ "_"
-                    else  fieldName
+                    then  rawFieldName ++ "_"
+                    else  rawFieldName
 
               let sig = value.sig
 
               let fieldType = if input.isNullable then "Option<${sig}>" else sig
 
               let indent = "    "
-
-              let fieldDeclaration =
-                        indent
-                    ++  "/// Maps to `"
-                    ++  input.pgName
-                    ++  ''
-                        `.
-                        ''
-                    ++  indent
-                    ++  "pub "
-                    ++  rustFieldName
-                    ++  ": "
-                    ++  fieldType
-                    ++  ","
 
               let paramFieldDeclaration =
                         indent
@@ -69,7 +52,7 @@ let run =
                         ''
                     ++  indent
                     ++  "pub "
-                    ++  rustFieldName
+                    ++  fieldName
                     ++  ": "
                     ++  fieldType
                     ++  ","
@@ -83,26 +66,19 @@ let run =
                         ''
                     ++  indent
                     ++  "pub "
-                    ++  rustFieldName
+                    ++  fieldName
                     ++  ": "
                     ++  fieldType
                     ++  ","
 
-              let paramExpr = "&self.${rustFieldName}"
-
-              let decoderExpr = "row.get(\"${input.pgName}\")"
-
               in  Sdk.Compiled.ok
                     Output
                     { fieldName
-                    , rustFieldName
                     , fieldType
-                    , fieldDeclaration
                     , paramFieldDeclaration
                     , columnFieldDeclaration
                     , pgName = input.pgName
-                    , paramExpr
-                    , decoderExpr
+                    , paramExpr = "&self.${fieldName}"
                     , pgType = value.pgType
                     , pgCastSuffix = value.pgCastSuffix
                     }
@@ -113,4 +89,4 @@ let run =
               (Value.run config input.value)
           )
 
-in  Algebra.module Input Output run
+in  Algebra.Interpreter.module Input Output run

@@ -1,8 +1,8 @@
 let Deps = ../Deps/package.dhall
 
-let Algebra = ./Algebra/package.dhall
+let Algebra = ../Algebras/package.dhall
 
-let Member = ./Member.dhall
+let Member = ./ResultColumnsMember.dhall
 
 let Input = Deps.Sdk.Project.ResultRows
 
@@ -11,7 +11,7 @@ let ExtraCtx = { sqlExp : Text, paramTypes : Text, paramExprs : Text }
 let Output = ExtraCtx -> Text -> { statementImpl : Text, typeDecls : Text }
 
 let run =
-      \(config : Algebra.Config) ->
+      \(config : Algebra.Interpreter.Config) ->
       \(input : Input) ->
         let compiledColumns =
               Deps.Typeclasses.Classes.Applicative.traverseList
@@ -59,7 +59,7 @@ let run =
                                           }
                                         ) ->
                                             "                    "
-                                        ++  ic.value.rustFieldName
+                                        ++  ic.value.fieldName
                                         ++  ": crate::mapping::decode_cell(row, 0, "
                                         ++  Natural/show ic.index
                                         ++  ")?,"
@@ -79,7 +79,7 @@ let run =
                                           }
                                         ) ->
                                             "                    "
-                                        ++  ic.value.rustFieldName
+                                        ++  ic.value.fieldName
                                         ++  ": crate::mapping::decode_cell(&row, row_index, "
                                         ++  Natural/show ic.index
                                         ++  ")?,"
@@ -343,4 +343,4 @@ let run =
               )
               compiledColumns
 
-in  Algebra.module Input Output run
+in  Algebra.Interpreter.module Input Output run

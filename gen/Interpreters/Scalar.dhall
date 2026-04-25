@@ -1,6 +1,6 @@
 let Deps = ../Deps/package.dhall
 
-let Algebra = ./Algebra/package.dhall
+let Algebra = ../Algebras/package.dhall
 
 let Sdk = Deps.Sdk
 
@@ -14,7 +14,7 @@ let Output =
       { sig : Text, pgType : Text, pgCastSuffix : Text, hasKnownPgType : Bool }
 
 let run =
-      \(config : Algebra.Config) ->
+      \(config : Algebra.Interpreter.Config) ->
       \(input : Input) ->
         merge
           { Primitive =
@@ -35,4 +35,4 @@ let run =
           }
           input
 
-in  Algebra.module Input Output run
+in  Algebra.Interpreter.module Input Output run

@@ -1,6 +1,6 @@
 let Deps = ../Deps/package.dhall
 
-let Algebra = ./Algebra/package.dhall
+let Algebra = ../Algebras/package.dhall
 
 let ResultRows = ./ResultRows.dhall
 
@@ -13,7 +13,7 @@ let Output = ExtraCtx -> Text -> { typeDecls : Text, statementImpl : Text }
 let Result = Deps.Sdk.Compiled.Type Output
 
 let run =
-      \(config : Algebra.Config) ->
+      \(config : Algebra.Interpreter.Config) ->
       \(input : Input) ->
         Deps.Prelude.Optional.fold
           ResultRows.Input
@@ -99,4 +99,4 @@ let run =
               )
           )
 
-in  Algebra.module Input Output run
+in  Algebra.Interpreter.module Input Output run

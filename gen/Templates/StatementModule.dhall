@@ -1,4 +1,4 @@
-let Algebra = ./Algebra/package.dhall
+let Algebra = ../Algebras/package.dhall
 
 let Deps = ../Deps/package.dhall
 
@@ -13,7 +13,7 @@ let Params =
       , statementImpl : Text
       }
 
-in  Algebra.module
+in  Algebra.Template.module
       Params
       ( \(params : Params) ->
           let paramsSection =

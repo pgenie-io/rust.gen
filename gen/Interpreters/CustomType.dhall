@@ -1,6 +1,6 @@
 let Deps = ../Deps/package.dhall
 
-let Algebra = ./Algebra/package.dhall
+let Algebra = ../Algebras/package.dhall
 
 let Sdk = Deps.Sdk
 
@@ -8,7 +8,7 @@ let Model = Deps.Sdk.Project
 
 let Templates = ../Templates/package.dhall
 
-let MemberGen = ./Member.dhall
+let MemberGen = ./CustomTypeMember.dhall
 
 let Input = Model.CustomType
 
@@ -19,10 +19,10 @@ let Output =
       , moduleContent : Text
       }
 
-in  Algebra.module
+in  Algebra.Interpreter.module
       Input
       Output
-      ( \(config : Algebra.Config) ->
+      ( \(config : Algebra.Interpreter.Config) ->
         \(input : Input) ->
           let typeName = Deps.CodegenKit.Name.toTextInPascal input.name
 
@@ -61,8 +61,7 @@ in  Algebra.module
                                               Templates.CustomCompositeTypeModule.Field
                                               ( \(member : MemberGen.Output) ->
                                                   { pgName = member.pgName
-                                                  , fieldName =
-                                                      member.rustFieldName
+                                                  , fieldName = member.fieldName
                                                   , fieldType = member.fieldType
                                                   }
                                               )
