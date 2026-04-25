@@ -14,7 +14,7 @@ let ResultModule = ./Result.dhall
 
 let QueryFragmentsModule = ./QueryFragments.dhall
 
-let MemberModule = ./Member.dhall
+let MemberModule = ./ParamsMember.dhall
 
 let Input = Deps.Sdk.Project.Query
 

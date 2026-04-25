@@ -2,7 +2,7 @@ let Deps = ../Deps/package.dhall
 
 let Algebra = ../Algebras/package.dhall
 
-let Member = ./Member.dhall
+let Member = ./ResultColumnsMember.dhall
 
 let Input = Deps.Sdk.Project.ResultRows
 
@@ -59,7 +59,7 @@ let run =
                                           }
                                         ) ->
                                             "                    "
-                                        ++  ic.value.rustFieldName
+                                        ++  ic.value.fieldName
                                         ++  ": crate::mapping::decode_cell(row, 0, "
                                         ++  Natural/show ic.index
                                         ++  ")?,"
@@ -79,7 +79,7 @@ let run =
                                           }
                                         ) ->
                                             "                    "
-                                        ++  ic.value.rustFieldName
+                                        ++  ic.value.fieldName
                                         ++  ": crate::mapping::decode_cell(&row, row_index, "
                                         ++  Natural/show ic.index
                                         ++  ")?,"

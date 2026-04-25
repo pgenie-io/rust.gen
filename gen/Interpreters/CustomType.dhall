@@ -8,7 +8,7 @@ let Model = Deps.Sdk.Project
 
 let Templates = ../Templates/package.dhall
 
-let MemberGen = ./Member.dhall
+let MemberGen = ./CustomTypeMember.dhall
 
 let Input = Model.CustomType
 
@@ -62,7 +62,7 @@ in  Algebra.Interpreter.module
                                               ( \(member : MemberGen.Output) ->
                                                   { pgName = member.pgName
                                                   , fieldName =
-                                                      member.rustFieldName
+                                                      member.fieldName
                                                   , fieldType = member.fieldType
                                                   }
                                               )
