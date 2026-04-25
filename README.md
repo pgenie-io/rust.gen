@@ -135,7 +135,7 @@ name: music_catalogue
 version: 1.0.0
 artifacts:
   rust:
-    gen: https://raw.githubusercontent.com/pgenie-io/rust.gen/v0.1.1/gen/Gen.dhall
+    gen: https://raw.githubusercontent.com/pgenie-io/rust.gen/v0.2.0/gen/Gen.dhall
     config:
       deadpool: true # Provide deadpool integration with prepared statement caching. `false` by default.
 ```
