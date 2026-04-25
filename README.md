@@ -18,6 +18,18 @@ The plugin produces a self-contained Rust crate containing:
   - **Composite types** → Rust `struct` declarations with `#[derive(ToSql, FromSql)]` and per-field `#[postgres(name = "...")]` attributes.
 - **`src/types.rs`** – a module re-exporting all type modules.
 
+## Generator structure
+
+The generator is intentionally split so semantic interpretation and text rendering stay separate:
+
+- **`gen/Algebras/`** defines the shared interpreter and template interfaces.
+- **`gen/Interpreters/`** translates the pGenie project model into Rust-oriented generation data. Query parameters, result columns, and custom-type fields each have their own member interpreter modules.
+- **`gen/Templates/`** renders concrete output files from those interpreter outputs. Shared support files such as `mapping.rs`, `src/types.rs`, `src/statements.rs`, and the integration test harness are rendered by dedicated templates rather than inline in `Project.dhall`.
+- **`gen/compile.dhall`** wires repository-level config into the top-level project interpreter.
+- **`demo-output/`** is the checked-in fixture used to exercise the generator end to end.
+
+This keeps `gen/Interpreters/Project.dhall` focused on orchestration while the smaller template modules own the emitted Rust source text.
+
 ## Supported PostgreSQL types
 
 Following is a summary of the supported PostgreSQL types and their Rust equivalents, using the
