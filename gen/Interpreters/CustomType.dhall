@@ -1,6 +1,6 @@
 let Deps = ../Deps/package.dhall
 
-let Algebra = ./Algebra/package.dhall
+let Algebra = ../Algebras/package.dhall
 
 let Sdk = Deps.Sdk
 
@@ -19,10 +19,10 @@ let Output =
       , moduleContent : Text
       }
 
-in  Algebra.module
+in  Algebra.Interpreter.module
       Input
       Output
-      ( \(config : Algebra.Config) ->
+      ( \(config : Algebra.Interpreter.Config) ->
         \(input : Input) ->
           let typeName = Deps.CodegenKit.Name.toTextInPascal input.name
 

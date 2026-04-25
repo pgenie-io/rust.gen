@@ -1,6 +1,6 @@
 let Deps = ../Deps/package.dhall
 
-let Algebra = ./Algebra/package.dhall
+let Algebra = ../Algebras/package.dhall
 
 let Sdk = Deps.Sdk
 
@@ -17,7 +17,7 @@ let Input = Model.Project
 let Output = List Sdk.File.Type
 
 let combineOutputs =
-      \(config : Algebra.Config) ->
+      \(config : Algebra.Interpreter.Config) ->
       \(input : Input) ->
       \(queries : List QueryGen.Output) ->
       \(customTypes : List CustomTypeGen.Output) ->
@@ -526,7 +526,7 @@ let combineOutputs =
             : List Sdk.File.Type
 
 let run =
-      \(config : Algebra.Config) ->
+      \(config : Algebra.Interpreter.Config) ->
       \(input : Input) ->
         let compiledQueries
             : Sdk.Compiled.Type (List (Optional QueryGen.Output))
@@ -570,4 +570,4 @@ let run =
 
         in  files
 
-in  Algebra.module Input Output run
+in  Algebra.Interpreter.module Input Output run

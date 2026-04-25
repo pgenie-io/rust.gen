@@ -1,8 +1,8 @@
-let Algebra = ./Algebra/package.dhall
+let Algebra = ../Algebras/package.dhall
 
 let Params = { rootModuleName : Text }
 
-in  Algebra.module
+in  Algebra.Template.module
       Params
       ( \(params : Params) ->
           ''

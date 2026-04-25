@@ -1,6 +1,6 @@
 let Deps = ../Deps/package.dhall
 
-let Algebra = ./Algebra/package.dhall
+let Algebra = ../Algebras/package.dhall
 
 let Member = ./Member.dhall
 
@@ -11,7 +11,7 @@ let ExtraCtx = { sqlExp : Text, paramTypes : Text, paramExprs : Text }
 let Output = ExtraCtx -> Text -> { statementImpl : Text, typeDecls : Text }
 
 let run =
-      \(config : Algebra.Config) ->
+      \(config : Algebra.Interpreter.Config) ->
       \(input : Input) ->
         let compiledColumns =
               Deps.Typeclasses.Classes.Applicative.traverseList
@@ -343,4 +343,4 @@ let run =
               )
               compiledColumns
 
-in  Algebra.module Input Output run
+in  Algebra.Interpreter.module Input Output run

@@ -1,6 +1,6 @@
 let Deps = ../Deps/package.dhall
 
-let Algebra = ./Algebra/package.dhall
+let Algebra = ../Algebras/package.dhall
 
 let Lude = Deps.Lude
 
@@ -25,7 +25,7 @@ let Output =
       }
 
 let render =
-      \(config : Algebra.Config) ->
+      \(config : Algebra.Interpreter.Config) ->
       \(input : Input) ->
       \(result : ResultModule.Output) ->
       \(fragments : QueryFragmentsModule.Output) ->
@@ -103,7 +103,7 @@ let render =
             }
 
 let run =
-      \(config : Algebra.Config) ->
+      \(config : Algebra.Interpreter.Config) ->
       \(input : Input) ->
         Sdk.Compiled.nest
           Output
@@ -140,4 +140,4 @@ let run =
               )
           )
 
-in  Algebra.module Input Output run
+in  Algebra.Interpreter.module Input Output run

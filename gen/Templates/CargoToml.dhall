@@ -1,9 +1,9 @@
-let Algebra = ./Algebra/package.dhall
+let Algebra = ../Algebras/package.dhall
 
 let Params =
       { packageName : Text, version : Text, dbName : Text, deadpool : Bool }
 
-in  Algebra.module
+in  Algebra.Template.module
       Params
       ( \(params : Params) ->
           let deadpoolDep =

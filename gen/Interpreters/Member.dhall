@@ -1,6 +1,6 @@
 let Deps = ../Deps/package.dhall
 
-let Algebra = ./Algebra/package.dhall
+let Algebra = ../Algebras/package.dhall
 
 let Rust = ./Rust.dhall
 
@@ -27,7 +27,7 @@ let Output =
       }
 
 let run =
-      \(config : Algebra.Config) ->
+      \(config : Algebra.Interpreter.Config) ->
       \(input : Input) ->
         Sdk.Compiled.flatMap
           Value.Output
@@ -113,4 +113,4 @@ let run =
               (Value.run config input.value)
           )
 
-in  Algebra.module Input Output run
+in  Algebra.Interpreter.module Input Output run

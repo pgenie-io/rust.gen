@@ -1,6 +1,6 @@
 let Deps = ../Deps/package.dhall
 
-let Algebra = ./Algebra/package.dhall
+let Algebra = ../Algebras/package.dhall
 
 let Prelude = Deps.Prelude
 
@@ -73,10 +73,10 @@ let renderDocComment
         )
 
 let run =
-      \(config : Algebra.Config) ->
+      \(config : Algebra.Interpreter.Config) ->
       \(input : Input) ->
         Compiled.ok
           Output
           { mkSqlExp = renderSqlExp input, docComment = renderDocComment input }
 
-in  Algebra.module Input Output run
+in  Algebra.Interpreter.module Input Output run

@@ -1,5 +1,3 @@
-let Algebra = ./Algebra/package.dhall
-
 let Deps = ../Deps/package.dhall
 
 let Field = { pgName : Text, fieldName : Text, fieldType : Text }

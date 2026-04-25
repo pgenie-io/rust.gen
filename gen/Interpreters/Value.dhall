@@ -1,6 +1,6 @@
 let Deps = ../Deps/package.dhall
 
-let Algebra = ./Algebra/package.dhall
+let Algebra = ../Algebras/package.dhall
 
 let Sdk = Deps.Sdk
 
@@ -16,7 +16,7 @@ let Output =
 let Result = Sdk.Compiled.Type Output
 
 let run =
-      \(config : Algebra.Config) ->
+      \(config : Algebra.Interpreter.Config) ->
       \(input : Input) ->
         Sdk.Compiled.flatMap
           Scalar.Output
@@ -71,4 +71,4 @@ let run =
           )
           (Scalar.run config input.scalar)
 
-in  Algebra.module Input Output run
+in  Algebra.Interpreter.module Input Output run
