@@ -1,7 +1,6 @@
 let Algebra = ../Algebras/package.dhall
 
-let Params =
-      { crateName : Text, migrationEntries : Text, stmtAsserts : Text }
+let Params = { crateName : Text, migrationEntries : Text, stmtAsserts : Text }
 
 in  Algebra.Template.module
       Params

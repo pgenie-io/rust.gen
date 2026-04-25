@@ -61,8 +61,7 @@ in  Algebra.Interpreter.module
                                               Templates.CustomCompositeTypeModule.Field
                                               ( \(member : MemberGen.Output) ->
                                                   { pgName = member.pgName
-                                                  , fieldName =
-                                                      member.fieldName
+                                                  , fieldName = member.fieldName
                                                   , fieldType = member.fieldType
                                                   }
                                               )
