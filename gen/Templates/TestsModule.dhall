@@ -121,7 +121,7 @@ in  Algebra.Template.module
           }
 
           #[tokio::test]
-          async fn all_declared_statements_execute_with_default_values() {
+          async fn all_defaultable_declared_statements_execute_with_default_values() {
               let (pool, _container) = setup_pool().await;
           ${params.stmtAsserts}
           }

@@ -21,6 +21,7 @@ let Output =
       , paramExpr : Text
       , pgType : Text
       , pgCastSuffix : Text
+      , supportsDefault : Bool
       }
 
 let run =
@@ -40,6 +41,8 @@ let run =
               let sig = value.sig
 
               let fieldType = if input.isNullable then "Option<${sig}>" else sig
+
+              let supportsDefault = input.isNullable || value.supportsDefault
 
               let indent = "    "
 
@@ -81,6 +84,7 @@ let run =
                     , paramExpr = "&self.${fieldName}"
                     , pgType = value.pgType
                     , pgCastSuffix = value.pgCastSuffix
+                    , supportsDefault
                     }
           )
           ( Sdk.Compiled.nest

@@ -8,6 +8,7 @@ let Params =
       , srcPath : Text
       , sqlDocLines : Text
       , hasParams : Bool
+      , canDeriveDefault : Bool
       , paramFields : Text
       , typeDecls : Text
       , statementImpl : Text
@@ -45,7 +46,9 @@ in  Algebra.Template.module
                       /// # Source Path
                       ///
                       /// `${params.srcPath}`
-                      #[derive(Debug, Clone, PartialEq, Default)]
+                      #[derive(Debug, Clone, PartialEq${if    params.canDeriveDefault
+                                                        then  ", Default"
+                                                        else  ""})]
                       pub struct Input {
                       ${params.paramFields}
                       }

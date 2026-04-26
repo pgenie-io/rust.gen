@@ -155,7 +155,9 @@ let combineOutputs =
                 "\n"
                 QueryGen.Output
                 ( \(query : QueryGen.Output) ->
-                    "    assert_statement_executes::<statements::${query.statementModuleName}::Input>(&pool, \"${query.statementModuleName}\").await;"
+                    if    query.canDeriveDefault
+                    then  "    assert_statement_executes::<statements::${query.statementModuleName}::Input>(&pool, \"${query.statementModuleName}\").await;"
+                    else  ""
                 )
                 queries
 

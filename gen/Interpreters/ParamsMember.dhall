@@ -15,6 +15,7 @@ let Output =
       , paramExpr : Text
       , pgType : Text
       , pgCastSuffix : Text
+      , supportsDefault : Bool
       }
 
 let run =
@@ -30,6 +31,7 @@ let run =
               , paramExpr = member.paramExpr
               , pgType = member.pgType
               , pgCastSuffix = member.pgCastSuffix
+              , supportsDefault = member.supportsDefault
               }
           )
           (SharedMember.run config input)

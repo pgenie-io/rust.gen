@@ -27,38 +27,49 @@ let escapeRustString
             ''
         ]
 
+let quotePostgresKeywordCasts
+    : Text -> Text
+    = Prelude.Function.composeList
+        Text
+        [ Prelude.Text.replace "::char" "::\\\"char\\\"" ]
+
 let renderSqlExp
     : Deps.Sdk.Project.QueryFragments -> List Text -> Text
     = \(fragments : Deps.Sdk.Project.QueryFragments) ->
       \(castSuffixes : List Text) ->
-            "\""
-        ++  Prelude.Text.concatMap
-              Deps.Sdk.Project.QueryFragment
-              ( \(queryFragment : Deps.Sdk.Project.QueryFragment) ->
-                  merge
-                    { Sql = escapeRustString
-                    , Var =
-                        \(var : Deps.Sdk.Project.Var) ->
-                          let suffix =
-                                Prelude.Optional.fold
-                                  Text
-                                  ( Prelude.List.index
-                                      var.paramIndex
-                                      Text
-                                      castSuffixes
-                                  )
-                                  Text
-                                  (\(s : Text) -> s)
-                                  ""
+        let rawSql
+            : Text
+            =     "\""
+              ++  Prelude.Text.concatMap
+                    Deps.Sdk.Project.QueryFragment
+                    ( \(queryFragment : Deps.Sdk.Project.QueryFragment) ->
+                        merge
+                          { Sql = escapeRustString
+                          , Var =
+                              \(var : Deps.Sdk.Project.Var) ->
+                                let suffix =
+                                      Prelude.Optional.fold
+                                        Text
+                                        ( Prelude.List.index
+                                            var.paramIndex
+                                            Text
+                                            castSuffixes
+                                        )
+                                        Text
+                                        (\(s : Text) -> s)
+                                        ""
 
-                          in      "\$"
-                              ++  Deps.Prelude.Natural.show (var.paramIndex + 1)
-                              ++  suffix
-                    }
-                    queryFragment
-              )
-              fragments
-        ++  "\""
+                                in      "\$"
+                                    ++  Deps.Prelude.Natural.show
+                                          (var.paramIndex + 1)
+                                    ++  suffix
+                          }
+                          queryFragment
+                    )
+                    fragments
+              ++  "\""
+
+        in  quotePostgresKeywordCasts rawSql
 
 let renderDocComment
     : Deps.Sdk.Project.QueryFragments -> Text

@@ -11,7 +11,12 @@ let Primitive = ./Primitive.dhall
 let Input = Model.Scalar
 
 let Output =
-      { sig : Text, pgType : Text, pgCastSuffix : Text, hasKnownPgType : Bool }
+      { sig : Text
+      , pgType : Text
+      , pgCastSuffix : Text
+      , hasKnownPgType : Bool
+      , supportsDefault : Bool
+      }
 
 let run =
       \(config : Algebra.Interpreter.Config) ->
@@ -31,6 +36,7 @@ let run =
                       , pgType = "Type::UNKNOWN"
                       , pgCastSuffix = "::public.${pgName}"
                       , hasKnownPgType = False
+                      , supportsDefault = False
                       }
           }
           input

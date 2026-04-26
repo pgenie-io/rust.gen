@@ -11,7 +11,12 @@ let Scalar = ./Scalar.dhall
 let Input = Model.Value
 
 let Output =
-      { sig : Text, pgType : Text, pgCastSuffix : Text, hasKnownPgType : Bool }
+      { sig : Text
+      , pgType : Text
+      , pgCastSuffix : Text
+      , hasKnownPgType : Bool
+      , supportsDefault : Bool
+      }
 
 let Result = Sdk.Compiled.Type Output
 
@@ -58,6 +63,7 @@ let run =
                           , pgType = arrayPgType
                           , pgCastSuffix = arrayPgCastSuffix
                           , hasKnownPgType = scalar.hasKnownPgType
+                          , supportsDefault = True
                           }
                 )
                 ( Sdk.Compiled.ok
@@ -66,6 +72,7 @@ let run =
                     , pgType = scalar.pgType
                     , pgCastSuffix = scalar.pgCastSuffix
                     , hasKnownPgType = scalar.hasKnownPgType
+                    , supportsDefault = scalar.supportsDefault
                     }
                 )
           )

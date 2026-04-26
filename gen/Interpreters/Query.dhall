@@ -22,6 +22,7 @@ let Output =
       { statementModuleName : Text
       , statementModulePath : Text
       , statementModuleContents : Text
+      , canDeriveDefault : Bool
       }
 
 let render =
@@ -85,6 +86,12 @@ let render =
         let hasParams =
               Deps.Prelude.List.null MemberModule.Output params == False
 
+        let canDeriveDefault =
+              Deps.Prelude.List.all
+                MemberModule.Output
+                (\(member : MemberModule.Output) -> member.supportsDefault)
+                params
+
         let statementModuleContents =
               Templates.StatementModule.run
                 { queryName
@@ -92,6 +99,7 @@ let render =
                 , srcPath = input.srcPath
                 , sqlDocLines
                 , hasParams
+                , canDeriveDefault
                 , paramFields
                 , typeDecls = result.typeDecls
                 , statementImpl = result.statementImpl
@@ -100,6 +108,7 @@ let render =
         in  { statementModuleName
             , statementModulePath
             , statementModuleContents
+            , canDeriveDefault
             }
 
 let run =
