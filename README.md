@@ -122,7 +122,7 @@ The generator is written in [Dhall](https://dhall-lang.org/). Install dhall by f
 To check the generator against the demo fixture:
 
 ```bash
-dhall --file gen/demo.dhall
+dhall --file tests/Demo.dhall
 ```
 
 ## Using the plugin in a pGenie project

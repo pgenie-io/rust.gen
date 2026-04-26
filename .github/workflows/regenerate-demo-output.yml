@@ -1,0 +1,54 @@
+name: Regenerate demo output
+
+on:
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate-and-verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Clean up existing demo-output
+        run: |
+          rm -rf demo-output
+          mkdir -p demo-output
+
+      - name: Regenerate demo-output from Dhall
+        uses: nikita-volkov/dhall-directory-tree.github-action@v1
+        with:
+          dhall_file: tests/Demo.dhall
+          output_dir: demo-output
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: demo-output
+
+      - name: Verify generated crate
+        run: cargo test --manifest-path demo-output/Cargo.toml
+
+      - name: Commit and push regenerated demo-output
+        shell: bash
+        run: |
+          git add -A demo-output
+
+          if git diff --cached --quiet -- demo-output; then
+            echo "demo-output is already up to date."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: regenerate demo-output"
+          git push origin HEAD:${GITHUB_REF_NAME}
