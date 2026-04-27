@@ -18,7 +18,7 @@ use tokio_postgres::types::Type;
 /// # Source Path
 ///
 /// `./queries/select_album_by_format.sql`
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Input {
     /// Maps to `$format` in the template.
     pub format: crate::types::AlbumFormat,
