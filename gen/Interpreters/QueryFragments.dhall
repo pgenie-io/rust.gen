@@ -1,14 +1,14 @@
-let Deps = ../Deps/package.dhall
-
 let Algebra = ../Algebras/package.dhall
 
-let Prelude = Deps.Prelude
+let Lude = ../Deps/Lude.dhall
 
-let Sdk = Deps.Sdk
+let Prelude = ../Deps/Prelude.dhall
 
-let Compiled = Sdk.Compiled
+let Project = ../Deps/Project.dhall
 
-let Input = Deps.Sdk.Project.QueryFragments
+let Compiled = Lude.Compiled
+
+let Input = Project.QueryFragments
 
 let Output
     : Type
@@ -34,19 +34,19 @@ let quotePostgresKeywordCasts
         [ Prelude.Text.replace "::char" "::\\\"char\\\"" ]
 
 let renderSqlExp
-    : Deps.Sdk.Project.QueryFragments -> List Text -> Text
-    = \(fragments : Deps.Sdk.Project.QueryFragments) ->
+    : Project.QueryFragments -> List Text -> Text
+    = \(fragments : Project.QueryFragments) ->
       \(castSuffixes : List Text) ->
         let rawSql
             : Text
             =     "\""
               ++  Prelude.Text.concatMap
-                    Deps.Sdk.Project.QueryFragment
-                    ( \(queryFragment : Deps.Sdk.Project.QueryFragment) ->
+                    Project.QueryFragment
+                    ( \(queryFragment : Project.QueryFragment) ->
                         merge
                           { Sql = escapeRustString
                           , Var =
-                              \(var : Deps.Sdk.Project.Var) ->
+                              \(var : Project.Var) ->
                                 let suffix =
                                       Prelude.Optional.fold
                                         Text
@@ -60,7 +60,7 @@ let renderSqlExp
                                         ""
 
                                 in      "\$"
-                                    ++  Deps.Prelude.Natural.show
+                                    ++  Prelude.Natural.show
                                           (var.paramIndex + 1)
                                     ++  suffix
                           }
@@ -72,13 +72,13 @@ let renderSqlExp
         in  quotePostgresKeywordCasts rawSql
 
 let renderDocComment
-    : Deps.Sdk.Project.QueryFragments -> Text
+    : Project.QueryFragments -> Text
     = Prelude.Text.concatMap
-        Deps.Sdk.Project.QueryFragment
-        ( \(queryFragment : Deps.Sdk.Project.QueryFragment) ->
+        Project.QueryFragment
+        ( \(queryFragment : Project.QueryFragment) ->
             merge
               { Sql = Prelude.Function.identity Text
-              , Var = \(var : Deps.Sdk.Project.Var) -> "\$" ++ var.rawName
+              , Var = \(var : Project.Var) -> "\$" ++ var.rawName
               }
               queryFragment
         )

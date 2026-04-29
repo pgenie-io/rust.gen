@@ -1,8 +1,10 @@
-let Deps = ../Deps/package.dhall
-
 let Algebra = ../Algebras/package.dhall
 
-let Input = Deps.Sdk.Project.Primitive
+let Lude = ../Deps/Lude.dhall
+
+let Project = ../Deps/Project.dhall
+
+let Input = Project.Primitive
 
 let Output =
       { sig : Text
@@ -13,14 +15,13 @@ let Output =
       }
 
 let unsupportedType =
-      \(type : Text) ->
-        Deps.Sdk.Compiled.report Output [ type ] "Unsupported type"
+      \(type : Text) -> Lude.Compiled.report Output [ type ] "Unsupported type"
 
 let known =
       \(sig : Text) ->
       \(pgType : Text) ->
       \(supportsDefault : Bool) ->
-        Deps.Sdk.Compiled.ok
+        Lude.Compiled.ok
           Output
           { sig
           , pgType
@@ -31,7 +32,7 @@ let known =
 
 let inferred =
       \(sig : Text) ->
-        Deps.Sdk.Compiled.ok
+        Lude.Compiled.ok
           Output
           { sig
           , pgType = "Type::UNKNOWN"

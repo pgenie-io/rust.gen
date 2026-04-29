@@ -1,7 +1,5 @@
 let Algebra = ../Algebras/package.dhall
 
-let Deps = ../Deps/package.dhall
-
 let Params =
       { queryName : Text
       , typeName : Text

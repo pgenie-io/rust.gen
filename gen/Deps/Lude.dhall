@@ -1,2 +1,2 @@
-https://raw.githubusercontent.com/codemine-io/lude.dhall/v0.2.0/package.dhall
-  sha256:0ff6332b9f223a1308ae8e6ded71209fdbca16f70cc3bfffc741ac65b1319aac
+https://github.com/codemine-io/lude.dhall/releases/download/v2.1.0/resolved.dhall
+  sha256:58644711718eea8260a26e3574aad01db1d085857ad47f11dadd33a53ccb1baf

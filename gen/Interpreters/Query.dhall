@@ -1,12 +1,12 @@
-let Deps = ../Deps/package.dhall
-
 let Algebra = ../Algebras/package.dhall
 
-let Lude = Deps.Lude
+let Lude = ../Deps/Lude.dhall
 
-let Typeclasses = Deps.Typeclasses
+let Prelude = ../Deps/Prelude.dhall
 
-let Sdk = Deps.Sdk
+let Typeclasses = ../Deps/Typeclasses.dhall
+
+let Project = ../Deps/Project.dhall
 
 let Templates = ../Templates/package.dhall
 
@@ -16,7 +16,7 @@ let QueryFragmentsModule = ./QueryFragments.dhall
 
 let MemberModule = ./ParamsMember.dhall
 
-let Input = Deps.Sdk.Project.Query
+let Input = Project.Query
 
 let Output =
       { statementModuleName : Text
@@ -31,30 +31,30 @@ let render =
       \(result : ResultModule.Output) ->
       \(fragments : QueryFragmentsModule.Output) ->
       \(params : List MemberModule.Output) ->
-        let statementModuleName = Deps.CodegenKit.Name.toTextInSnake input.name
+        let statementModuleName = Lude.Name.toTextInSnake input.name
 
         let statementModulePath = "src/statements/${statementModuleName}.rs"
 
-        let queryName = Deps.CodegenKit.Name.toTextInSnake input.name
+        let queryName = Lude.Name.toTextInSnake input.name
 
-        let typeName = Deps.CodegenKit.Name.toTextInPascal input.name
+        let typeName = Lude.Name.toTextInPascal input.name
 
         let paramExprs =
-              Deps.Prelude.Text.concatMapSep
+              Prelude.Text.concatMapSep
                 ", "
                 MemberModule.Output
                 (\(member : MemberModule.Output) -> member.paramExpr)
                 params
 
         let paramTypesText =
-              Deps.Prelude.Text.concatMapSep
+              Prelude.Text.concatMapSep
                 ", "
                 MemberModule.Output
                 (\(member : MemberModule.Output) -> member.pgType)
                 params
 
         let paramCastSuffixes =
-              Deps.Prelude.List.map
+              Prelude.List.map
                 MemberModule.Output
                 Text
                 (\(member : MemberModule.Output) -> member.pgCastSuffix)
@@ -69,7 +69,7 @@ let render =
                 typeName
 
         let paramFields =
-              Deps.Prelude.Text.concatMapSep
+              Prelude.Text.concatMapSep
                 "\n"
                 MemberModule.Output
                 ( \(member : MemberModule.Output) ->
@@ -78,16 +78,12 @@ let render =
                 params
 
         let sqlDocLines =
-                  "/// "
-              ++  Deps.Lude.Extensions.Text.prefixEachLine
-                    "/// "
-                    fragments.docComment
+              "/// " ++ Lude.Text.prefixEachLine "/// " fragments.docComment
 
-        let hasParams =
-              Deps.Prelude.List.null MemberModule.Output params == False
+        let hasParams = Prelude.List.null MemberModule.Output params == False
 
         let canDeriveDefault =
-              Deps.Prelude.List.all
+              Prelude.List.all
                 MemberModule.Output
                 (\(member : MemberModule.Output) -> member.supportsDefault)
                 params
@@ -114,34 +110,34 @@ let render =
 let run =
       \(config : Algebra.Interpreter.Config) ->
       \(input : Input) ->
-        Sdk.Compiled.nest
+        Lude.Compiled.nest
           Output
           input.srcPath
           ( Typeclasses.Classes.Applicative.map3
-              Sdk.Compiled.Type
-              Sdk.Compiled.applicative
+              Lude.Compiled.Type
+              Lude.Compiled.applicative
               ResultModule.Output
               QueryFragmentsModule.Output
               (List MemberModule.Output)
               Output
               (render config input)
-              ( Sdk.Compiled.nest
+              ( Lude.Compiled.nest
                   ResultModule.Output
                   "result"
                   (ResultModule.run config input.result)
               )
-              ( Sdk.Compiled.nest
+              ( Lude.Compiled.nest
                   QueryFragmentsModule.Output
                   "sql"
                   (QueryFragmentsModule.run config input.fragments)
               )
-              ( Sdk.Compiled.nest
+              ( Lude.Compiled.nest
                   (List MemberModule.Output)
                   "params"
                   ( Typeclasses.Classes.Applicative.traverseList
-                      Sdk.Compiled.Type
-                      Sdk.Compiled.applicative
-                      Deps.Sdk.Project.Member
+                      Lude.Compiled.Type
+                      Lude.Compiled.applicative
+                      Project.Member
                       MemberModule.Output
                       (MemberModule.run config)
                       input.params

@@ -1,4 +1,4 @@
-let Deps = ../Deps/package.dhall
+let Prelude = ../Deps/Prelude.dhall
 
 let Variant = { name : Text, pgValue : Text }
 
@@ -36,10 +36,10 @@ let run =
                       let first = renderFirstVariant head
 
                       let rest =
-                            Deps.Prelude.Text.concatMap
+                            Prelude.Text.concatMap
                               Variant
                               renderVariant
-                              (Deps.Prelude.List.drop 1 Variant params.variants)
+                              (Prelude.List.drop 1 Variant params.variants)
 
                       in  first ++ rest
                 }

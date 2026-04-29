@@ -1,17 +1,15 @@
-let Deps = ./Deps/package.dhall
-
-let Sdk = Deps.Sdk
-
-let CodegenKit = Deps.CodegenKit
+let Project = ./Deps/Project.dhall
 
 let Config = ./Config.dhall
 
 let ProjectInterpreter = ./Interpreters/Project.dhall
 
+let Lude = ./Deps/Lude.dhall
+
 in  \(config : Optional Config) ->
-    \(project : Sdk.Project.Project) ->
+    \(project : Project.Project) ->
       let interpreterConfig =
-            { rootModuleName = Deps.CodegenKit.Name.toTextInSnake project.name
+            { rootModuleName = Lude.Name.toTextInSnake project.name
             , deadpool =
                 merge
                   { None = False, Some = \(c : Config) -> c.deadpool }

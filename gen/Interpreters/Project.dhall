@@ -1,10 +1,12 @@
-let Deps = ../Deps/package.dhall
-
 let Algebra = ../Algebras/package.dhall
 
-let Sdk = Deps.Sdk
+let Lude = ../Deps/Lude.dhall
 
-let Model = Deps.Sdk.Project
+let Prelude = ../Deps/Prelude.dhall
+
+let Typeclasses = ../Deps/Typeclasses.dhall
+
+let Project = ../Deps/Project.dhall
 
 let Templates = ../Templates/package.dhall
 
@@ -12,9 +14,9 @@ let QueryGen = ./Query.dhall
 
 let CustomTypeGen = ./CustomType.dhall
 
-let Input = Model.Project
+let Input = Project.Project
 
-let Output = List Sdk.File.Type
+let Output = List Lude.File.Type
 
 let combineOutputs =
       \(config : Algebra.Interpreter.Config) ->
@@ -22,10 +24,10 @@ let combineOutputs =
       \(queries : List QueryGen.Output) ->
       \(customTypes : List CustomTypeGen.Output) ->
         let customTypeFiles
-            : List Sdk.File.Type
-            = Deps.Prelude.List.map
+            : List Lude.File.Type
+            = Prelude.List.map
                 CustomTypeGen.Output
-                Sdk.File.Type
+                Lude.File.Type
                 ( \(customType : CustomTypeGen.Output) ->
                     { path = customType.modulePath
                     , content = customType.moduleContent
@@ -34,10 +36,10 @@ let combineOutputs =
                 customTypes
 
         let statementFiles
-            : List Sdk.File.Type
-            = Deps.Prelude.List.map
+            : List Lude.File.Type
+            = Prelude.List.map
                 QueryGen.Output
-                Sdk.File.Type
+                Lude.File.Type
                 ( \(query : QueryGen.Output) ->
                     { path = query.statementModulePath
                     , content = query.statementModuleContents
@@ -46,10 +48,10 @@ let combineOutputs =
                 queries
 
         let migrationFiles
-            : List Sdk.File.Type
-            = Deps.Prelude.List.map
+            : List Lude.File.Type
+            = Prelude.List.map
                 { name : Text, sql : Text }
-                Sdk.File.Type
+                Lude.File.Type
                 ( \(migration : { name : Text, sql : Text }) ->
                     { path = "migrations/${migration.name}.sql"
                     , content = migration.sql
@@ -58,7 +60,7 @@ let combineOutputs =
                 input.migrations
 
         let typeModNames =
-              Deps.Prelude.Text.concatMapSep
+              Prelude.Text.concatMapSep
                 "\n"
                 CustomTypeGen.Output
                 ( \(customType : CustomTypeGen.Output) ->
@@ -67,7 +69,7 @@ let combineOutputs =
                 customTypes
 
         let typeReexports =
-              Deps.Prelude.Text.concatMapSep
+              Prelude.Text.concatMapSep
                 "\n"
                 CustomTypeGen.Output
                 ( \(customType : CustomTypeGen.Output) ->
@@ -76,7 +78,7 @@ let combineOutputs =
                 customTypes
 
         let stmtModNames =
-              Deps.Prelude.Text.concatMapSep
+              Prelude.Text.concatMapSep
                 "\n"
                 QueryGen.Output
                 ( \(query : QueryGen.Output) ->
@@ -85,18 +87,18 @@ let combineOutputs =
                 queries
 
         let libRs
-            : Sdk.File.Type
+            : Lude.File.Type
             = { path = "src/lib.rs"
               , content =
                   Templates.LibRs.run { rootModuleName = config.rootModuleName }
               }
 
         let packageName =
-              Deps.CodegenKit.Name.toTextInKebab
-                (Deps.CodegenKit.Name.concat input.space [ input.name ])
+              Lude.Name.toTextInKebab
+                (Lude.Name.concat input.space [ input.name ])
 
         let cargoToml
-            : Sdk.File.Type
+            : Lude.File.Type
             = { path = "Cargo.toml"
               , content =
                   Templates.CargoToml.run
@@ -107,13 +109,13 @@ let combineOutputs =
                         ++  Natural/show input.version.minor
                         ++  "."
                         ++  Natural/show input.version.patch
-                    , dbName = Deps.CodegenKit.Name.toTextInSnake input.name
+                    , dbName = Lude.Name.toTextInSnake input.name
                     , deadpool = config.deadpool
                     }
               }
 
         let mappingModRs
-            : Sdk.File.Type
+            : Lude.File.Type
             = { path = "src/mapping.rs"
               , content =
                   Templates.MappingModule.run { deadpool = config.deadpool }
@@ -125,33 +127,33 @@ let combineOutputs =
               }
 
         let deadpoolFiles
-            : List Sdk.File.Type
+            : List Lude.File.Type
             = if    config.deadpool
               then  [ { path = "src/mapping/error.rs"
                       , content = Templates.MappingErrorModule.run {=}
                       }
                     ]
-              else  [] : List Sdk.File.Type
+              else  [] : List Lude.File.Type
 
         let statementsRs
-            : Sdk.File.Type
+            : Lude.File.Type
             = { path = "src/statements.rs"
               , content = Templates.StatementsModule.run { stmtModNames }
               }
 
         let typesRs
-            : Sdk.File.Type
+            : Lude.File.Type
             = { path = "src/types.rs"
               , content =
                   Templates.TypesModule.run { typeModNames, typeReexports }
               }
 
         let crateName =
-              Deps.CodegenKit.Name.toTextInSnake
-                (Deps.CodegenKit.Name.concat input.space [ input.name ])
+              Lude.Name.toTextInSnake
+                (Lude.Name.concat input.space [ input.name ])
 
         let stmtAsserts =
-              Deps.Prelude.Text.concatMapSep
+              Prelude.Text.concatMapSep
                 "\n"
                 QueryGen.Output
                 ( \(query : QueryGen.Output) ->
@@ -163,7 +165,7 @@ let combineOutputs =
 
         let migrationEntries
             : Text
-            = Deps.Prelude.Text.concatMapSep
+            = Prelude.Text.concatMapSep
                 "\n"
                 { name : Text, sql : Text }
                 ( \(migration : { name : Text, sql : Text }) ->
@@ -172,7 +174,7 @@ let combineOutputs =
                 input.migrations
 
         let testsRs
-            : Sdk.File.Type
+            : Lude.File.Type
             = { path = "tests/tests.rs"
               , content =
                   Templates.TestsModule.run
@@ -191,47 +193,47 @@ let combineOutputs =
               # migrationFiles
               # customTypeFiles
               # statementFiles
-            : List Sdk.File.Type
+            : List Lude.File.Type
 
 let run =
       \(config : Algebra.Interpreter.Config) ->
       \(input : Input) ->
         let compiledQueries
-            : Sdk.Compiled.Type (List (Optional QueryGen.Output))
-            = Sdk.Compiled.traverseList
-                Deps.Sdk.Project.Query
+            : Lude.Compiled.Type (List (Optional QueryGen.Output))
+            = Lude.Compiled.traverseList
+                Project.Query
                 (Optional QueryGen.Output)
-                ( \(query : Deps.Sdk.Project.Query) ->
-                    Deps.Typeclasses.Classes.Alternative.optional
-                      Sdk.Compiled.Type
-                      Sdk.Compiled.alternative
+                ( \(query : Project.Query) ->
+                    Typeclasses.Classes.Alternative.optional
+                      Lude.Compiled.Type
+                      Lude.Compiled.alternative
                       QueryGen.Output
                       (QueryGen.run config query)
                 )
                 input.queries
 
         let compiledQueries
-            : Sdk.Compiled.Type (List QueryGen.Output)
-            = Sdk.Compiled.map
+            : Lude.Compiled.Type (List QueryGen.Output)
+            = Lude.Compiled.map
                 (List (Optional QueryGen.Output))
                 (List QueryGen.Output)
-                (Deps.Prelude.List.unpackOptionals QueryGen.Output)
+                (Prelude.List.unpackOptionals QueryGen.Output)
                 compiledQueries
 
         let compiledTypes
-            : Sdk.Compiled.Type (List CustomTypeGen.Output)
-            = Sdk.Compiled.traverseList
-                Deps.Sdk.Project.CustomType
+            : Lude.Compiled.Type (List CustomTypeGen.Output)
+            = Lude.Compiled.traverseList
+                Project.CustomType
                 CustomTypeGen.Output
                 (CustomTypeGen.run config)
                 input.customTypes
 
         let files
-            : Sdk.Compiled.Type (List Sdk.File.Type)
-            = Sdk.Compiled.map2
+            : Lude.Compiled.Type (List Lude.File.Type)
+            = Lude.Compiled.map2
                 (List QueryGen.Output)
                 (List CustomTypeGen.Output)
-                (List Sdk.File.Type)
+                (List Lude.File.Type)
                 (combineOutputs config input)
                 compiledQueries
                 compiledTypes

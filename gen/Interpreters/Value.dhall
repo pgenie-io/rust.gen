@@ -1,14 +1,14 @@
-let Deps = ../Deps/package.dhall
-
 let Algebra = ../Algebras/package.dhall
 
-let Sdk = Deps.Sdk
+let Lude = ../Deps/Lude.dhall
 
-let Model = Deps.Sdk.Project
+let Prelude = ../Deps/Prelude.dhall
+
+let Project = ../Deps/Project.dhall
 
 let Scalar = ./Scalar.dhall
 
-let Input = Model.Value
+let Input = Project.Value
 
 let Output =
       { sig : Text
@@ -18,20 +18,20 @@ let Output =
       , supportsDefault : Bool
       }
 
-let Result = Sdk.Compiled.Type Output
+let Result = Lude.Compiled.Type Output
 
 let run =
       \(config : Algebra.Interpreter.Config) ->
       \(input : Input) ->
-        Sdk.Compiled.flatMap
+        Lude.Compiled.flatMap
           Scalar.Output
           Output
           ( \(scalar : Scalar.Output) ->
-              Deps.Prelude.Optional.fold
-                Model.ArraySettings
+              Prelude.Optional.fold
+                Project.ArraySettings
                 input.arraySettings
                 Result
-                ( \(arraySettings : Model.ArraySettings) ->
+                ( \(arraySettings : Project.ArraySettings) ->
                     let elementSig =
                           if    arraySettings.elementIsNullable
                           then  "Option<${scalar.sig}>"
@@ -53,11 +53,11 @@ let run =
                           if    scalar.hasKnownPgType
                           then  ""
                           else      scalar.pgCastSuffix
-                                ++  Deps.Prelude.Text.replicate
+                                ++  Prelude.Text.replicate
                                       arraySettings.dimensionality
                                       "[]"
 
-                    in  Sdk.Compiled.ok
+                    in  Lude.Compiled.ok
                           Output
                           { sig = arraySig
                           , pgType = arrayPgType
@@ -66,7 +66,7 @@ let run =
                           , supportsDefault = True
                           }
                 )
-                ( Sdk.Compiled.ok
+                ( Lude.Compiled.ok
                     Output
                     { sig = scalar.sig
                     , pgType = scalar.pgType

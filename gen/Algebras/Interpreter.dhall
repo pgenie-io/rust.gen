@@ -1,11 +1,11 @@
-let Deps = ../Deps/package.dhall
+let Lude = ../Deps/Lude.dhall
 
 let Config = { rootModuleName : Text, deadpool : Bool }
 
 let module =
       \(Input : Type) ->
       \(Output : Type) ->
-        let Result = Deps.Sdk.Compiled.Type Output
+        let Result = Lude.Compiled.Type Output
 
         let Run = Config -> Input -> Result
 

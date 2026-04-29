@@ -1,16 +1,16 @@
-let Deps = ../Deps/package.dhall
-
 let Algebra = ../Algebras/package.dhall
 
-let Sdk = Deps.Sdk
+let Lude = ../Deps/Lude.dhall
 
-let Model = Deps.Sdk.Project
+let Prelude = ../Deps/Prelude.dhall
+
+let Project = ../Deps/Project.dhall
 
 let Templates = ../Templates/package.dhall
 
 let MemberGen = ./CustomTypeMember.dhall
 
-let Input = Model.CustomType
+let Input = Project.CustomType
 
 let Output =
       { moduleName : Text
@@ -24,26 +24,26 @@ in  Algebra.Interpreter.module
       Output
       ( \(config : Algebra.Interpreter.Config) ->
         \(input : Input) ->
-          let typeName = Deps.CodegenKit.Name.toTextInPascal input.name
+          let typeName = Lude.Name.toTextInPascal input.name
 
-          let moduleName = Deps.CodegenKit.Name.toTextInSnake input.name
+          let moduleName = Lude.Name.toTextInSnake input.name
 
           let modulePath = "src/types/${moduleName}.rs"
 
           in  merge
                 { Composite =
-                    \(members : List Model.Member) ->
+                    \(members : List Project.Member) ->
                       let compiledMembers
-                          : Sdk.Compiled.Type (List MemberGen.Output)
-                          = Sdk.Compiled.traverseList
-                              Model.Member
+                          : Lude.Compiled.Type (List MemberGen.Output)
+                          = Lude.Compiled.traverseList
+                              Project.Member
                               MemberGen.Output
                               (MemberGen.run config)
                               members
 
                       let compiledOutput
-                          : Sdk.Compiled.Type Output
-                          = Sdk.Compiled.map
+                          : Lude.Compiled.Type Output
+                          = Lude.Compiled.map
                               (List MemberGen.Output)
                               Output
                               ( \(members : List MemberGen.Output) ->
@@ -56,7 +56,7 @@ in  Algebra.Interpreter.module
                                         , pgSchema = input.pgSchema
                                         , pgTypeName = input.pgName
                                         , fields =
-                                            Deps.Prelude.List.map
+                                            Prelude.List.map
                                               MemberGen.Output
                                               Templates.CustomCompositeTypeModule.Field
                                               ( \(member : MemberGen.Output) ->
@@ -73,8 +73,8 @@ in  Algebra.Interpreter.module
 
                       in  compiledOutput
                 , Enum =
-                    \(variants : List Model.EnumVariant) ->
-                      Sdk.Compiled.ok
+                    \(variants : List Project.EnumVariant) ->
+                      Lude.Compiled.ok
                         Output
                         { moduleName
                         , typeName
@@ -85,12 +85,12 @@ in  Algebra.Interpreter.module
                               , pgSchema = input.pgSchema
                               , pgTypeName = input.pgName
                               , variants =
-                                  Deps.Prelude.List.map
-                                    Model.EnumVariant
+                                  Prelude.List.map
+                                    Project.EnumVariant
                                     Templates.CustomEnumTypeModule.Variant
-                                    ( \(variant : Model.EnumVariant) ->
+                                    ( \(variant : Project.EnumVariant) ->
                                         { name =
-                                            Deps.CodegenKit.Name.toTextInPascal
+                                            Lude.Name.toTextInPascal
                                               variant.name
                                         , pgValue = variant.pgName
                                         }
@@ -99,8 +99,8 @@ in  Algebra.Interpreter.module
                               }
                         }
                 , Domain =
-                    \(value : Model.Value) ->
-                      Sdk.Compiled.message
+                    \(value : Project.Value) ->
+                      Lude.Compiled.message
                         Output
                         "Domain types are not yet supported."
                 }

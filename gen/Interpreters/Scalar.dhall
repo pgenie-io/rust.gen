@@ -1,14 +1,12 @@
-let Deps = ../Deps/package.dhall
-
 let Algebra = ../Algebras/package.dhall
 
-let Sdk = Deps.Sdk
+let Lude = ../Deps/Lude.dhall
 
-let Model = Deps.Sdk.Project
+let Project = ../Deps/Project.dhall
 
 let Primitive = ./Primitive.dhall
 
-let Input = Model.Scalar
+let Input = Project.Scalar
 
 let Output =
       { sig : Text
@@ -23,16 +21,14 @@ let run =
       \(input : Input) ->
         merge
           { Primitive =
-              \(primitive : Model.Primitive) -> Primitive.run config primitive
+              \(primitive : Project.Primitive) -> Primitive.run config primitive
           , Custom =
-              \(name : Model.Name) ->
-                let pgName = Deps.CodegenKit.Name.toTextInSnake name
+              \(name : Project.Name) ->
+                let pgName = Lude.Name.toTextInSnake name
 
-                in  Sdk.Compiled.ok
+                in  Lude.Compiled.ok
                       Output
-                      { sig =
-                          "crate::types::${Deps.CodegenKit.Name.toTextInPascal
-                                             name}"
+                      { sig = "crate::types::${Lude.Name.toTextInPascal name}"
                       , pgType = "Type::UNKNOWN"
                       , pgCastSuffix = "::public.${pgName}"
                       , hasKnownPgType = False

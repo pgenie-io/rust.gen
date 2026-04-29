@@ -1,10 +1,16 @@
-let Deps = ../Deps/package.dhall
-
 let Algebra = ../Algebras/package.dhall
+
+let Lude = ../Deps/Lude.dhall
+
+let Prelude = ../Deps/Prelude.dhall
+
+let Typeclasses = ../Deps/Typeclasses.dhall
+
+let Project = ../Deps/Project.dhall
 
 let Member = ./ResultColumnsMember.dhall
 
-let Input = Deps.Sdk.Project.ResultRows
+let Input = Project.ResultRows
 
 let ExtraCtx = { sqlExp : Text, paramTypes : Text, paramExprs : Text }
 
@@ -14,29 +20,26 @@ let run =
       \(config : Algebra.Interpreter.Config) ->
       \(input : Input) ->
         let compiledColumns =
-              Deps.Typeclasses.Classes.Applicative.traverseList
-                Deps.Sdk.Compiled.Type
-                Deps.Sdk.Compiled.applicative
-                Deps.Sdk.Project.Member
+              Typeclasses.Classes.Applicative.traverseList
+                Lude.Compiled.Type
+                Lude.Compiled.applicative
+                Project.Member
                 Member.Output
                 (Member.run config)
-                ( Deps.Prelude.NonEmpty.toList
-                    Deps.Sdk.Project.Member
-                    input.columns
-                )
+                (Prelude.NonEmpty.toList Project.Member input.columns)
 
-        in  Deps.Sdk.Compiled.flatMap
+        in  Lude.Compiled.flatMap
               (List Member.Output)
               Output
               ( \(columns : List Member.Output) ->
-                  Deps.Sdk.Compiled.ok
+                  Lude.Compiled.ok
                     Output
                     ( \(ctx : ExtraCtx) ->
                       \(typeNameBase : Text) ->
                         let rowTypeName = "OutputRow"
 
                         let fieldDecls =
-                              Deps.Prelude.Text.concatMapSep
+                              Prelude.Text.concatMapSep
                                 "\n"
                                 Member.Output
                                 ( \(col : Member.Output) ->
@@ -45,12 +48,12 @@ let run =
                                 columns
 
                         let indexedColumns =
-                              Deps.Prelude.List.indexed Member.Output columns
+                              Prelude.List.indexed Member.Output columns
 
                         let singleDecoderFields =
-                              Deps.Prelude.Text.concatSep
+                              Prelude.Text.concatSep
                                 "\n"
-                                ( Deps.Prelude.List.map
+                                ( Prelude.List.map
                                     { index : Natural, value : Member.Output }
                                     Text
                                     ( \ ( ic
@@ -68,9 +71,9 @@ let run =
                                 )
 
                         let multipleDecoderFields =
-                              Deps.Prelude.Text.concatSep
+                              Prelude.Text.concatSep
                                 "\n"
-                                ( Deps.Prelude.List.map
+                                ( Prelude.List.map
                                     { index : Natural, value : Member.Output }
                                     Text
                                     ( \ ( ic
@@ -109,7 +112,7 @@ let run =
                                   ''
                               ++  "\n"
                               ++  "    const SQL: &str = "
-                              ++  Deps.Lude.Extensions.Text.indent 23 ctx.sqlExp
+                              ++  Lude.Text.indent 23 ctx.sqlExp
                               ++  ''
                                   ;
                                   ''

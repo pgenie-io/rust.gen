@@ -1,26 +1,30 @@
-let Deps = ../Deps/package.dhall
-
 let Algebra = ../Algebras/package.dhall
+
+let Lude = ../Deps/Lude.dhall
+
+let Prelude = ../Deps/Prelude.dhall
+
+let Project = ../Deps/Project.dhall
 
 let ResultRows = ./ResultRows.dhall
 
-let Input = Deps.Sdk.Project.Result
+let Input = Project.Result
 
 let ExtraCtx = { sqlExp : Text, paramTypes : Text, paramExprs : Text }
 
 let Output = ExtraCtx -> Text -> { typeDecls : Text, statementImpl : Text }
 
-let Result = Deps.Sdk.Compiled.Type Output
+let Result = Lude.Compiled.Type Output
 
 let run =
       \(config : Algebra.Interpreter.Config) ->
       \(input : Input) ->
-        Deps.Prelude.Optional.fold
+        Prelude.Optional.fold
           ResultRows.Input
           input
           Result
           (ResultRows.run config)
-          ( Deps.Sdk.Compiled.ok
+          ( Lude.Compiled.ok
               Output
               ( \(ctx : ExtraCtx) ->
                 \(typeNameBase : Text) ->
@@ -44,7 +48,7 @@ let run =
                           ''
                       ++  "\n"
                       ++  "    const SQL: &str = "
-                      ++  Deps.Lude.Extensions.Text.indent 23 ctx.sqlExp
+                      ++  Lude.Text.indent 23 ctx.sqlExp
                       ++  ''
                           ;
                           ''

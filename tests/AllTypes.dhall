@@ -5,11 +5,11 @@
 -- ```
 --
 -- This generates the demo output for the music_catalogue fixture project.
-let Deps = ../gen/Deps/package.dhall
+let Fixtures = ../gen/Deps/Fixtures.dhall
 
 let Gen = ../gen/Gen.dhall
 
-let project = Deps.Sdk.Fixtures.AllTypes
+let project = Fixtures.AllTypes
 
 let compiledFiles = Gen.compileToFileMap (Some { deadpool = True }) project
 

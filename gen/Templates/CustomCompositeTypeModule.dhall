@@ -1,4 +1,4 @@
-let Deps = ../Deps/package.dhall
+let Prelude = ../Deps/Prelude.dhall
 
 let Field = { pgName : Text, fieldName : Text, fieldType : Text }
 
@@ -12,7 +12,7 @@ let Params =
 let run =
       \(params : Params) ->
         let fieldDecls =
-              Deps.Prelude.Text.concatMap
+              Prelude.Text.concatMap
                 Field
                 ( \(field : Field) ->
                     ''

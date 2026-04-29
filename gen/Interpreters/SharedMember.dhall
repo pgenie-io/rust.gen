@@ -1,16 +1,14 @@
-let Deps = ../Deps/package.dhall
-
 let Algebra = ../Algebras/package.dhall
+
+let Lude = ../Deps/Lude.dhall
 
 let Rust = ./Rust.dhall
 
-let Sdk = Deps.Sdk
-
-let Model = Deps.Sdk.Project
+let Project = ../Deps/Project.dhall
 
 let Value = ./Value.dhall
 
-let Input = Model.Member
+let Input = Project.Member
 
 let Output =
       { fieldName : Text
@@ -27,11 +25,11 @@ let Output =
 let run =
       \(config : Algebra.Interpreter.Config) ->
       \(input : Input) ->
-        Sdk.Compiled.flatMap
+        Lude.Compiled.flatMap
           Value.Output
           Output
           ( \(value : Value.Output) ->
-              let rawFieldName = Deps.CodegenKit.Name.toTextInSnake input.name
+              let rawFieldName = Lude.Name.toTextInSnake input.name
 
               let fieldName =
                     if    Rust.isRustKeywordName input.name
@@ -74,7 +72,7 @@ let run =
                     ++  fieldType
                     ++  ","
 
-              in  Sdk.Compiled.ok
+              in  Lude.Compiled.ok
                     Output
                     { fieldName
                     , fieldType
@@ -87,7 +85,7 @@ let run =
                     , supportsDefault
                     }
           )
-          ( Sdk.Compiled.nest
+          ( Lude.Compiled.nest
               Value.Output
               input.pgName
               (Value.run config input.value)

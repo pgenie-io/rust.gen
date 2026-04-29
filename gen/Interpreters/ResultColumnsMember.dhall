@@ -1,8 +1,6 @@
-let Deps = ../Deps/package.dhall
-
 let Algebra = ../Algebras/package.dhall
 
-let Sdk = Deps.Sdk
+let Lude = ../Deps/Lude.dhall
 
 let SharedMember = ./SharedMember.dhall
 
@@ -14,7 +12,7 @@ let Output =
 let run =
       \(config : Algebra.Interpreter.Config) ->
       \(input : Input) ->
-        Sdk.Compiled.map
+        Lude.Compiled.map
           SharedMember.Output
           Output
           ( \(member : SharedMember.Output) ->

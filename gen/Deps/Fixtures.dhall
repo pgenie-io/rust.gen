@@ -1,0 +1,2 @@
+https://raw.githubusercontent.com/pgenie-io/gen-sdk/5a421d47c388fe53e0c1f61d002268d4ab911d79/dhall/Fixtures/package.dhall
+  sha256:182e63af525da99859eddddda2470f338afb66b5862b44b1a75b281a650af238
