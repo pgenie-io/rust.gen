@@ -78,24 +78,20 @@ let run =
                     , supportsDefault
                     }
 
-        in  Lude.Compiled.flatMap
+        in  Lude.Compiled.map2
               Name.Output
+              Value.Output
               Output
-              ( \(name : Name.Output) ->
-                  Lude.Compiled.map
-                    Value.Output
-                    Output
-                    (\(value : Value.Output) -> combine name value)
-                    ( Lude.Compiled.nest
-                        Value.Output
-                        input.pgName
-                        (Value.run config input.value)
-                    )
-              )
+              combine
               ( Lude.Compiled.nest
                   Name.Output
                   input.pgName
                   (Name.run config input.name)
+              )
+              ( Lude.Compiled.nest
+                  Value.Output
+                  input.pgName
+                  (Value.run config input.value)
               )
 
 in  Algebra.module Input Output run
