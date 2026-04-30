@@ -1,8 +1,14 @@
+let Algebra = ../Algebras/Interpreter.dhall
+
 let Prelude = ../Deps/Prelude.dhall
 
 let Project = ../Deps/Project.dhall
 
 let Lude = ../Deps/Lude.dhall
+
+let Input = Project.Name
+
+let Output = { fieldName : Text }
 
 let keywordSpecs =
       let Char = Lude.LatinChar.Type
@@ -119,7 +125,7 @@ let keywordSpecs =
             (Lude.List.uncons Char)
             words
 
-let isRustKeywordName =
+let isRustKeyword =
       \(name : Project.Name) ->
             Prelude.List.null Project.LatinWordOrNumber name.tail
         &&  Lude.List.elem
@@ -128,4 +134,14 @@ let isRustKeywordName =
               name.head
               keywordSpecs
 
-in  { isRustKeywordName }
+let run =
+      \(config : Algebra.Config) ->
+      \(input : Input) ->
+        let rawFieldName = Lude.Name.toTextInSnake input
+
+        let fieldName =
+              if isRustKeyword input then rawFieldName ++ "_" else rawFieldName
+
+        in  Lude.Compiled.ok Output { fieldName }
+
+in  Algebra.module Input Output run
