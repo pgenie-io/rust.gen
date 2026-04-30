@@ -119,6 +119,8 @@ let keywordSpecs =
             , [ y, i, e, l, d ]
             ]
 
+      let words = [] : List (List Lude.LatinChar.Type)
+
       in  Prelude.List.mapMaybe
             (List Char)
             Lude.LatinChars.Type
