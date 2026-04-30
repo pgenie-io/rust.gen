@@ -6,135 +6,132 @@ let Project = ../Deps/Project.dhall
 
 let Lude = ../Deps/Lude.dhall
 
+let Typeclasses = ../Deps/Typeclasses.dhall
+
 let Input = Project.Name
 
 let Output = { fieldName : Text }
 
-let keywordSpecs =
+let isRustKeyword =
       let Char = Lude.LatinChar.Type
 
-      let a = Char.A
+      let Keyword = List Char
 
-      let b = Char.B
+      let keywords =
+            let a = Char.A
 
-      let c = Char.C
+            let b = Char.B
 
-      let d = Char.D
+            let c = Char.C
 
-      let e = Char.E
+            let d = Char.D
 
-      let f = Char.F
+            let e = Char.E
 
-      let g = Char.G
+            let f = Char.F
 
-      let h = Char.H
+            let g = Char.G
 
-      let i = Char.I
+            let h = Char.H
 
-      let j = Char.J
+            let i = Char.I
 
-      let k = Char.K
+            let j = Char.J
 
-      let l = Char.L
+            let k = Char.K
 
-      let m = Char.M
+            let l = Char.L
 
-      let n = Char.N
+            let m = Char.M
 
-      let o = Char.O
+            let n = Char.N
 
-      let p = Char.P
+            let o = Char.O
 
-      let q = Char.Q
+            let p = Char.P
 
-      let r = Char.R
+            let q = Char.Q
 
-      let s = Char.S
+            let r = Char.R
 
-      let t = Char.T
+            let s = Char.S
 
-      let u = Char.U
+            let t = Char.T
 
-      let v = Char.V
+            let u = Char.U
 
-      let w = Char.W
+            let v = Char.V
 
-      let x = Char.X
+            let w = Char.W
 
-      let y = Char.Y
+            let x = Char.X
 
-      let z = Char.Z
+            let y = Char.Y
 
-      let words =
-            [ [ a, b, s, t, r, a, c, t ]
-            , [ a, s ]
-            , [ a, s, y, n, c ]
-            , [ a, w, a, i, t ]
-            , [ b, e, c, o, m, e ]
-            , [ b, o, x ]
-            , [ b, r, e, a, k ]
-            , [ c, o, n, s, t ]
-            , [ c, o, n, t, i, n, u, e ]
-            , [ c, r, a, t, e ]
-            , [ d, o ]
-            , [ d, y, n ]
-            , [ e, l, s, e ]
-            , [ e, n, u, m ]
-            , [ e, x, t, e, r, n ]
-            , [ f, a, l, s, e ]
-            , [ f, i, n, a, l ]
-            , [ f, n ]
-            , [ f, o, r ]
-            , [ i, f ]
-            , [ i, m, p, l ]
-            , [ i, n ]
-            , [ l, e, t ]
-            , [ l, o, o, p ]
-            , [ m, a, c, r, o ]
-            , [ m, a, t, c, h ]
-            , [ m, o, d ]
-            , [ m, o, v, e ]
-            , [ m, u, t ]
-            , [ o, v, e, r, r, i, d, e ]
-            , [ p, r, i, v ]
-            , [ p, u, b ]
-            , [ r, e, f ]
-            , [ r, e, t, u, r, n ]
-            , [ s, e, l, f ]
-            , [ s, t, a, t, i, c ]
-            , [ s, t, r, u, c, t ]
-            , [ s, u, p, e, r ]
-            , [ t, r, a, i, t ]
-            , [ t, r, u, e ]
-            , [ t, y, p, e ]
-            , [ t, y, p, e, o, f ]
-            , [ t, r, y ]
-            , [ u, n, i, o, n ]
-            , [ u, n, s, a, f, e ]
-            , [ u, s, e ]
-            , [ u, n, s, i, z, e, d ]
-            , [ v, i, r, t, u, a, l ]
-            , [ w, h, e, r, e ]
-            , [ w, h, i, l, e ]
-            , [ y, i, e, l, d ]
-            ]
+            let z = Char.Z
 
-      let words = [] : List (List Lude.LatinChar.Type)
+            in  [ [ a, b, s, t, r, a, c, t ]
+                , [ a, s ]
+                , [ a, s, y, n, c ]
+                , [ a, w, a, i, t ]
+                , [ b, e, c, o, m, e ]
+                , [ b, o, x ]
+                , [ b, r, e, a, k ]
+                , [ c, o, n, s, t ]
+                , [ c, o, n, t, i, n, u, e ]
+                , [ c, r, a, t, e ]
+                , [ d, o ]
+                , [ d, y, n ]
+                , [ e, l, s, e ]
+                , [ e, n, u, m ]
+                , [ e, x, t, e, r, n ]
+                , [ f, a, l, s, e ]
+                , [ f, i, n, a, l ]
+                , [ f, n ]
+                , [ f, o, r ]
+                , [ i, f ]
+                , [ i, m, p, l ]
+                , [ i, n ]
+                , [ l, e, t ]
+                , [ l, o, o, p ]
+                , [ m, a, c, r, o ]
+                , [ m, a, t, c, h ]
+                , [ m, o, d ]
+                , [ m, o, v, e ]
+                , [ m, u, t ]
+                , [ o, v, e, r, r, i, d, e ]
+                , [ p, r, i, v ]
+                , [ p, u, b ]
+                , [ r, e, f ]
+                , [ r, e, t, u, r, n ]
+                , [ s, e, l, f ]
+                , [ s, t, a, t, i, c ]
+                , [ s, t, r, u, c, t ]
+                , [ s, u, p, e, r ]
+                , [ t, r, a, i, t ]
+                , [ t, r, u, e ]
+                , [ t, y, p, e ]
+                , [ t, y, p, e, o, f ]
+                , [ t, r, y ]
+                , [ u, n, i, o, n ]
+                , [ u, n, s, a, f, e ]
+                , [ u, s, e ]
+                , [ u, n, s, i, z, e, d ]
+                , [ v, i, r, t, u, a, l ]
+                , [ w, h, e, r, e ]
+                , [ w, h, i, l, e ]
+                , [ y, i, e, l, d ]
+                ]
 
-      in  Prelude.List.mapMaybe
-            (List Char)
-            Lude.LatinChars.Type
-            (Lude.List.uncons Char)
-            words
+      let keywordEquality =
+            Typeclasses.Instances.List.equality Char Lude.LatinChar.equality
 
-let isRustKeyword =
-      \(name : Project.Name) ->
-            Prelude.List.null Project.LatinWordOrNumber name.tail
-        &&  Lude.List.elem
-              Lude.LatinChars.Type
-              Lude.LatinChars.equality
-              name.head
-              keywordSpecs
+      in  \(name : Project.Name) ->
+            if    Prelude.List.null Project.LatinWordOrNumber name.tail
+            then  let word = Prelude.NonEmpty.toList Char name.head
+
+                  in  Lude.List.elem Keyword keywordEquality word keywords
+            else  False
 
 let run =
       \(config : Algebra.Config) ->
