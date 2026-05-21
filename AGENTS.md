@@ -162,3 +162,58 @@ To create a generator for a different target language:
 2. **Rewrite leaf Interpreters** (`Scalar`, `Primitive`, `Value`) to map domain concepts to the new language's type system.
 3. **Rewrite Templates** to emit the new language's syntax.
 4. **Keep the architecture**: Algebras, `Compiled` effect system, hierarchical Interpreter composition, and narrow Template interfaces remain identical.
+
+
+## Design rules
+
+- `gen/Templates/` must not depend on `gen/Interpreters/` or the Project model from `Deps.Sdk`.
+- Textual templates should be extracted into `gen/Templates/` as much as possible. `gen/Interpreters/` should primarily be responsible for interpreting the Project model and orchestrating the generation process.
+- Templates may depend on other templates and their parameter structures may contain parameter structures of other templates. This may be especially useful for lists and optionals.
+  - However a final design decision has not been made on this and it may be simpler to just have the templates be simple and independent, with the interpreters responsible for composing them together as needed by calling them and thus interpreting into structures over chunks of text.
+    - Pick either approach, just be consistent within the boundaries of a module.
+
+## Dhall Code Style Rules
+
+### No pointless string concatenations
+
+Never concatenate two string literals with `++` when they can be a single literal. A `"\n"` between two multiline strings, or a short literal like `" */"` after a multiline string, must be absorbed into the adjacent string.
+
+Bad: `'' ... '' ++ " */"` or `someStr ++ "\n" ++ '' ... ''`
+Good: fold the literal into the neighbouring multiline string.
+
+### Prefer interpolation over concatenation
+
+When embedding a variable in a string, use Dhall string interpolation (`${expr}`) instead of `"prefix" ++ expr ++ "suffix"`.
+
+Bad: `"Optional<" ++ boxedType ++ ">"`
+Good: `"Optional<${boxedType}>"`
+
+### Indentation via `indent`, never manual
+
+Never embed indentation in generated string fragments using `${"    "}` padding or hardcoded leading spaces. Instead, produce the string content without indentation and apply `Deps.Lude.Extensions.Text.indent` at the splice site.
+
+Bad (in fragment builder):
+```dhall
+''
+${"        "}/**
+${"        "} * Doc.
+${"        "} */
+${"        "}${fieldType} ${fieldName}''
+```
+
+Good (fragment builder produces unindented content, splice site indents):
+```dhall
+-- builder:
+''
+/**
+ * Doc.
+ */
+${fieldType} ${fieldName}''
+
+-- splice site:
+Deps.Lude.Extensions.Text.indent 8 fragment
+```
+
+### Indentation belongs at the splice site, not the construction site
+
+Any string that is meant to be spliced into another string must be constructed without indentation. The `Deps.Lude.Extensions.Text.indent` utility must be applied where the string is spliced into its surrounding context. This eliminates coupling between the string builder and the indentation level of the context it lands in.
