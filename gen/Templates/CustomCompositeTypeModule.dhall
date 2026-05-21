@@ -27,7 +27,7 @@ let run =
             use postgres_types::{ToSql, FromSql};
 
             /// Representation of the `${params.pgTypeName}` PostgreSQL composite type.
-            #[derive(Debug, Clone, PartialEq, Eq, Default, ToSql, FromSql)]
+            #[derive(Debug, Clone, PartialEq, Default, ToSql, FromSql)]
             #[postgres(name = "${params.pgTypeName}")]
             pub struct ${params.typeName} {
             ${fieldDecls}}

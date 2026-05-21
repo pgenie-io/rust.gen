@@ -60,8 +60,7 @@ let renderSqlExp
                                         ""
 
                                 in      "\$"
-                                    ++  Prelude.Natural.show
-                                          (var.paramIndex + 1)
+                                    ++  Natural/show (var.paramIndex + 1)
                                     ++  suffix
                           }
                           queryFragment

@@ -31,13 +31,13 @@ let render =
       \(result : ResultModule.Output) ->
       \(fragments : QueryFragmentsModule.Output) ->
       \(params : List MemberModule.Output) ->
-        let statementModuleName = Lude.Name.toTextInSnake input.name
+        let statementModuleName = input.name.inSnakeCase
 
         let statementModulePath = "src/statements/${statementModuleName}.rs"
 
-        let queryName = Lude.Name.toTextInSnake input.name
+        let queryName = input.name.inSnakeCase
 
-        let typeName = Lude.Name.toTextInPascal input.name
+        let typeName = input.name.inPascalCase
 
         let paramExprs =
               Prelude.Text.concatMapSep

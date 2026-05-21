@@ -94,8 +94,7 @@ let combineOutputs =
               }
 
         let packageName =
-              Lude.Name.toTextInKebab
-                (Lude.Name.concat input.space [ input.name ])
+              input.space.inKebabCase ++ "-" ++ input.name.inKebabCase
 
         let cargoToml
             : Lude.File.Type
@@ -109,7 +108,7 @@ let combineOutputs =
                         ++  Natural/show input.version.minor
                         ++  "."
                         ++  Natural/show input.version.patch
-                    , dbName = Lude.Name.toTextInSnake input.name
+                    , dbName = input.name.inSnakeCase
                     , deadpool = config.deadpool
                     }
               }
@@ -148,9 +147,7 @@ let combineOutputs =
                   Templates.TypesModule.run { typeModNames, typeReexports }
               }
 
-        let crateName =
-              Lude.Name.toTextInSnake
-                (Lude.Name.concat input.space [ input.name ])
+        let crateName = input.space.inSnakeCase ++ "_" ++ input.name.inSnakeCase
 
         let stmtAsserts =
               Prelude.Text.concatMapSep

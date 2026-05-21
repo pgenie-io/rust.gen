@@ -24,9 +24,9 @@ in  Algebra.Interpreter.module
       Output
       ( \(config : Algebra.Interpreter.Config) ->
         \(input : Input) ->
-          let typeName = Lude.Name.toTextInPascal input.name
+          let typeName = input.name.inPascalCase
 
-          let moduleName = Lude.Name.toTextInSnake input.name
+          let moduleName = input.name.inSnakeCase
 
           let modulePath = "src/types/${moduleName}.rs"
 
@@ -89,9 +89,7 @@ in  Algebra.Interpreter.module
                                     Project.EnumVariant
                                     Templates.CustomEnumTypeModule.Variant
                                     ( \(variant : Project.EnumVariant) ->
-                                        { name =
-                                            Lude.Name.toTextInPascal
-                                              variant.name
+                                        { name = variant.name.inPascalCase
                                         , pgValue = variant.pgName
                                         }
                                     )

@@ -24,11 +24,11 @@ let run =
               \(primitive : Project.Primitive) -> Primitive.run config primitive
           , Custom =
               \(name : Project.Name) ->
-                let pgName = Lude.Name.toTextInSnake name
+                let pgName = name.inSnakeCase
 
                 in  Lude.Compiled.ok
                       Output
-                      { sig = "crate::types::${Lude.Name.toTextInPascal name}"
+                      { sig = "crate::types::${name.inPascalCase}"
                       , pgType = "Type::UNKNOWN"
                       , pgCastSuffix = "::public.${pgName}"
                       , hasKnownPgType = False
