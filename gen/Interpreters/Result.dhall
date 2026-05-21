@@ -36,69 +36,33 @@ let run =
                       pub type Output = u64;
                       ''
                   , statementImpl =
-                          ''
-                          impl crate::mapping::Statement for Input {
-                          ''
-                      ++  ''
-                              type Result = Output;
-                          ''
-                      ++  "\n"
-                      ++  ''
-                              const RETURNS_ROWS: bool = false;
-                          ''
-                      ++  "\n"
-                      ++  "    const SQL: &str = "
-                      ++  Lude.Text.indent 23 ctx.sqlExp
-                      ++  ''
-                          ;
-                          ''
-                      ++  "\n"
-                      ++  "    const PARAM_TYPES: &'static [tokio_postgres::types::Type] = &["
-                      ++  ctx.paramTypes
-                      ++  ''
-                          ];
-                          ''
-                      ++  "\n"
-                      ++  ''
-                              #[allow(refining_impl_trait)]
-                          ''
-                      ++  ''
-                              fn encode_params(
-                          ''
-                      ++  ''
-                                  &self,
-                          ''
-                      ++  ''
-                              ) -> [&(dyn tokio_postgres::types::ToSql + Sync); Self::PARAM_TYPES.len()] {
-                          ''
-                      ++  "        ["
-                      ++  ctx.paramExprs
-                      ++  ''
-                          ]
-                          ''
-                      ++  ''
-                              }
-                          ''
-                      ++  "\n"
-                      ++  ''
-                              fn decode_result(
-                          ''
-                      ++  ''
-                                  _rows: Vec<tokio_postgres::Row>,
-                          ''
-                      ++  ''
-                                  affected_rows: u64,
-                          ''
-                      ++  ''
-                              ) -> Result<Self::Result, crate::mapping::DecodingError> {
-                          ''
-                      ++  ''
-                                  Ok(affected_rows)
-                          ''
-                      ++  ''
-                              }
-                          ''
-                      ++  "}"
+                      ''
+                      impl crate::mapping::Statement for Input {
+                          type Result = Output;
+
+                          const RETURNS_ROWS: bool = false;
+
+                          const SQL: &str = ${Lude.Text.indentNonEmpty
+                                                23
+                                                ctx.sqlExp};
+
+                          const PARAM_TYPES: &'static [tokio_postgres::types::Type] = &[${ctx.paramTypes}];
+
+                          #[allow(refining_impl_trait)]
+                          fn encode_params(
+                              &self,
+                          ) -> [&(dyn tokio_postgres::types::ToSql + Sync); Self::PARAM_TYPES.len()] {
+                              [${ctx.paramExprs}]
+                          }
+
+                          fn decode_result(
+                              _rows: Vec<tokio_postgres::Row>,
+                              affected_rows: u64,
+                          ) -> Result<Self::Result, crate::mapping::DecodingError> {
+                              Ok(affected_rows)
+                          }
+                      }
+                      ''
                   }
               )
           )

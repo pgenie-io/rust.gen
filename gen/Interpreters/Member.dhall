@@ -43,35 +43,15 @@ let run =
                       then  "Some(${value.testValueExpr})"
                       else  value.testValueExpr
 
-                let indent = "    "
-
                 let paramFieldDeclaration =
-                          indent
-                      ++  "/// Maps to `\$"
-                      ++  input.pgName
-                      ++  ''
-                          ` in the template.
-                          ''
-                      ++  indent
-                      ++  "pub "
-                      ++  fieldName
-                      ++  ": "
-                      ++  fieldType
-                      ++  ","
+                      ''
+                      /// Maps to `$${input.pgName}` in the template.
+                      pub ${fieldName}: ${fieldType},''
 
                 let columnFieldDeclaration =
-                          indent
-                      ++  "/// Maps to the `"
-                      ++  input.pgName
-                      ++  ''
-                          ` result set column.
-                          ''
-                      ++  indent
-                      ++  "pub "
-                      ++  fieldName
-                      ++  ": "
-                      ++  fieldType
-                      ++  ","
+                      ''
+                      /// Maps to the `${input.pgName}` result set column.
+                      pub ${fieldName}: ${fieldType},''
 
                 in  { fieldName
                     , fieldType

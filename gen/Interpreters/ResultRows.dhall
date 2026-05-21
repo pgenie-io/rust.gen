@@ -36,8 +36,6 @@ let run =
                     Output
                     ( \(ctx : ExtraCtx) ->
                       \(typeNameBase : Text) ->
-                        let rowTypeName = "OutputRow"
-
                         let fieldDecls =
                               Prelude.Text.concatMapSep
                                 "\n"
@@ -61,11 +59,8 @@ let run =
                                           , value : Member.Output
                                           }
                                         ) ->
-                                            "                    "
-                                        ++  ic.value.fieldName
-                                        ++  ": crate::mapping::decode_cell(row, 0, "
-                                        ++  Natural/show ic.index
-                                        ++  ")?,"
+                                        "${ic.value.fieldName}: crate::mapping::decode_cell(row, 0, ${Natural/show
+                                                                                                        ic.index})?,"
                                     )
                                     indexedColumns
                                 )
@@ -81,11 +76,8 @@ let run =
                                           , value : Member.Output
                                           }
                                         ) ->
-                                            "                    "
-                                        ++  ic.value.fieldName
-                                        ++  ": crate::mapping::decode_cell(&row, row_index, "
-                                        ++  Natural/show ic.index
-                                        ++  ")?,"
+                                        "${ic.value.fieldName}: crate::mapping::decode_cell(&row, row_index, ${Natural/show
+                                                                                                                 ic.index})?,"
                                     )
                                     indexedColumns
                                 )
@@ -94,116 +86,59 @@ let run =
                               ''
                               /// Row of [`Output`].
                               #[derive(Debug, Clone, PartialEq)]
-                              pub struct ${rowTypeName} {
-                              ${fieldDecls}
-                              }
-                              ''
+                              pub struct OutputRow {
+                                  ${Lude.Text.indentNonEmpty 4 fieldDecls}
+                              }''
 
                         let implPreamble =
-                                  ''
-                                  impl crate::mapping::Statement for Input {
-                                  ''
-                              ++  ''
-                                      type Result = Output;
-                                  ''
-                              ++  "\n"
-                              ++  ''
-                                      const RETURNS_ROWS: bool = true;
-                                  ''
-                              ++  "\n"
-                              ++  "    const SQL: &str = "
-                              ++  Lude.Text.indent 23 ctx.sqlExp
-                              ++  ''
-                                  ;
-                                  ''
-                              ++  "\n"
-                              ++  "    const PARAM_TYPES: &'static [tokio_postgres::types::Type] = &["
-                              ++  ctx.paramTypes
-                              ++  ''
-                                  ];
-                                  ''
-                              ++  "\n"
-                              ++  ''
-                                      #[allow(refining_impl_trait)]
-                                  ''
-                              ++  ''
-                                      fn encode_params(
-                                  ''
-                              ++  ''
-                                          &self,
-                                  ''
-                              ++  ''
-                                      ) -> [&(dyn tokio_postgres::types::ToSql + Sync); Self::PARAM_TYPES.len()] {
-                                  ''
-                              ++  "        ["
-                              ++  ctx.paramExprs
-                              ++  ''
-                                  ]
-                                  ''
-                              ++  ''
-                                      }
-                                  ''
+                              ''
+                              impl crate::mapping::Statement for Input {
+                                  type Result = Output;
+
+                                  const RETURNS_ROWS: bool = true;
+
+                                  const SQL: &str = ${Lude.Text.indentNonEmpty
+                                                        23
+                                                        ctx.sqlExp};
+
+                                  const PARAM_TYPES: &'static [tokio_postgres::types::Type] = &[${ctx.paramTypes}];
+
+                                  #[allow(refining_impl_trait)]
+                                  fn encode_params(
+                                      &self,
+                                  ) -> [&(dyn tokio_postgres::types::ToSql + Sync); Self::PARAM_TYPES.len()] {
+                                      [${ctx.paramExprs}]
+                                  }
+                              ''
 
                         let resolvedCardinality =
                               merge
                                 { Optional =
                                   { statementImpl =
                                           implPreamble
-                                      ++  "\n"
                                       ++  ''
+
                                               fn decode_result(
-                                          ''
-                                      ++  ''
                                                   rows: Vec<tokio_postgres::Row>,
-                                          ''
-                                      ++  ''
                                                   _affected_rows: u64,
-                                          ''
-                                      ++  ''
                                               ) -> Result<Self::Result, crate::mapping::DecodingError> {
-                                          ''
-                                      ++  ''
                                                   match rows.len() {
-                                          ''
-                                      ++  ''
                                                       0 => Ok(None),
-                                          ''
-                                      ++  ''
                                                       1 => {
-                                          ''
-                                      ++  ''
                                                           let row = rows.first().unwrap();
-                                          ''
-                                      ++  ''
                                                           Ok(Some(OutputRow {
-                                          ''
-                                      ++  singleDecoderFields
-                                      ++  "\n"
-                                      ++  ''
+                                                              ${Lude.Text.indentNonEmpty
+                                                                  20
+                                                                  singleDecoderFields}
                                                           }))
-                                          ''
-                                      ++  ''
                                                       }
-                                          ''
-                                      ++  ''
                                                       n => Err(crate::mapping::DecodingError::UnexpectedAmountOfRows {
-                                          ''
-                                      ++  ''
                                                           expected: 1,
-                                          ''
-                                      ++  ''
                                                           actual: n,
-                                          ''
-                                      ++  ''
                                                       }),
-                                          ''
-                                      ++  ''
                                                   }
-                                          ''
-                                      ++  ''
                                               }
-                                          ''
-                                      ++  "}"
+                                          }''
                                   , resultTypeDecl =
                                       ''
                                       /// Result of the statement parameterised by [`Input`].
@@ -212,70 +147,32 @@ let run =
                                 , Single =
                                   { statementImpl =
                                           implPreamble
-                                      ++  "\n"
                                       ++  ''
+
                                               fn decode_result(
-                                          ''
-                                      ++  ''
                                                   rows: Vec<tokio_postgres::Row>,
-                                          ''
-                                      ++  ''
                                                   _affected_rows: u64,
-                                          ''
-                                      ++  ''
                                               ) -> Result<Self::Result, crate::mapping::DecodingError> {
-                                          ''
-                                      ++  ''
                                                   match rows.len() {
-                                          ''
-                                      ++  ''
                                                       0 => Err(crate::mapping::DecodingError::UnexpectedAmountOfRows {
-                                          ''
-                                      ++  ''
                                                           expected: 1,
-                                          ''
-                                      ++  ''
                                                           actual: 0,
-                                          ''
-                                      ++  ''
                                                       }),
-                                          ''
-                                      ++  ''
                                                       1 => {
-                                          ''
-                                      ++  ''
                                                           let row = rows.first().unwrap();
-                                          ''
-                                      ++  ''
                                                           Ok(OutputRow {
-                                          ''
-                                      ++  singleDecoderFields
-                                      ++  "\n"
-                                      ++  ''
+                                                              ${Lude.Text.indentNonEmpty
+                                                                  20
+                                                                  singleDecoderFields}
                                                           })
-                                          ''
-                                      ++  ''
                                                       }
-                                          ''
-                                      ++  ''
                                                       n => Err(crate::mapping::DecodingError::UnexpectedAmountOfRows {
-                                          ''
-                                      ++  ''
                                                           expected: 1,
-                                          ''
-                                      ++  ''
                                                           actual: n,
-                                          ''
-                                      ++  ''
                                                       }),
-                                          ''
-                                      ++  ''
                                                   }
-                                          ''
-                                      ++  ''
                                               }
-                                          ''
-                                      ++  "}"
+                                          }''
                                   , resultTypeDecl =
                                       ''
                                       /// Result of the statement parameterised by [`Input`].
@@ -284,46 +181,24 @@ let run =
                                 , Multiple =
                                   { statementImpl =
                                           implPreamble
-                                      ++  "\n"
                                       ++  ''
+
                                               fn decode_result(
-                                          ''
-                                      ++  ''
                                                   rows: Vec<tokio_postgres::Row>,
-                                          ''
-                                      ++  ''
                                                   _affected_rows: u64,
-                                          ''
-                                      ++  ''
                                               ) -> Result<Self::Result, crate::mapping::DecodingError> {
-                                          ''
-                                      ++  ''
                                                   rows.into_iter()
-                                          ''
-                                      ++  ''
                                                       .enumerate()
-                                          ''
-                                      ++  ''
                                                       .map(|(row_index, row)| {
-                                          ''
-                                      ++  ''
                                                           Ok(OutputRow {
-                                          ''
-                                      ++  multipleDecoderFields
-                                      ++  "\n"
-                                      ++  ''
+                                                              ${Lude.Text.indentNonEmpty
+                                                                  20
+                                                                  multipleDecoderFields}
                                                           })
-                                          ''
-                                      ++  ''
                                                       })
-                                          ''
-                                      ++  ''
                                                       .collect()
-                                          ''
-                                      ++  ''
                                               }
-                                          ''
-                                      ++  "}"
+                                          }''
                                   , resultTypeDecl =
                                       ''
                                       /// Result of the statement parameterised by [`Input`].

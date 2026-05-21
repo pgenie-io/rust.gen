@@ -1,3 +1,5 @@
+let Lude = ../Deps/Lude.dhall
+
 let Prelude = ../Deps/Prelude.dhall
 
 let Variant = { name : Text, pgValue : Text }
@@ -9,22 +11,21 @@ let Params =
       , variants : List Variant
       }
 
-let renderVariant =
-      \(variant : Variant) ->
-        ''
-            /// Corresponds to the PostgreSQL enum variant `${variant.pgValue}`.
-            #[postgres(name = "${variant.pgValue}")]
-            ${variant.name},
-        ''
-
 let renderFirstVariant =
       \(variant : Variant) ->
         ''
-            /// Corresponds to the PostgreSQL enum variant `${variant.pgValue}`.
-            #[postgres(name = "${variant.pgValue}")]
-            #[default]
-            ${variant.name},
+        /// Corresponds to the PostgreSQL enum variant `${variant.pgValue}`.
+        #[postgres(name = "${variant.pgValue}")]
+        #[default]
+        ${variant.name},''
+
+let renderVariant =
+      \(variant : Variant) ->
         ''
+
+        /// Corresponds to the PostgreSQL enum variant `${variant.pgValue}`.
+        #[postgres(name = "${variant.pgValue}")]
+        ${variant.name},''
 
 let run =
       \(params : Params) ->
@@ -53,7 +54,8 @@ let run =
             #[postgres(name = "${params.pgTypeName}")]
             #[derive(Default)]
             pub enum ${params.typeName} {
-            ${variantDecls}}
+                ${Lude.Text.indentNonEmpty 4 variantDecls}
+            }
             ''
 
 in  { Params, Variant, run }

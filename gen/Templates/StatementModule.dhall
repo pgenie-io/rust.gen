@@ -1,5 +1,7 @@
 let Algebra = ../Algebras/package.dhall
 
+let Lude = ../Deps/Lude.dhall
+
 let Params =
       { queryName : Text
       , typeName : Text
@@ -48,7 +50,7 @@ in  Algebra.Template.module
                                                         then  ", Default"
                                                         else  ""})]
                       pub struct Input {
-                      ${params.paramFields}
+                          ${Lude.Text.indentNonEmpty 4 params.paramFields}
                       }
                       ''
 

@@ -78,7 +78,7 @@ let run =
         let rawFieldName = input.inSnakeCase
 
         let fieldName =
-              if isRustKeyword input then rawFieldName ++ "_" else rawFieldName
+              if isRustKeyword input then "${rawFieldName}_" else rawFieldName
 
         in  Lude.Compiled.ok Output { fieldName }
 

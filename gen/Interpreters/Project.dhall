@@ -93,8 +93,7 @@ let combineOutputs =
                   Templates.LibRs.run { rootModuleName = config.rootModuleName }
               }
 
-        let packageName =
-              input.space.inKebabCase ++ "-" ++ input.name.inKebabCase
+        let packageName = "${input.space.inKebabCase}-${input.name.inKebabCase}"
 
         let cargoToml
             : Lude.File.Type
@@ -103,11 +102,10 @@ let combineOutputs =
                   Templates.CargoToml.run
                     { packageName
                     , version =
-                            Natural/show input.version.major
-                        ++  "."
-                        ++  Natural/show input.version.minor
-                        ++  "."
-                        ++  Natural/show input.version.patch
+                        "${Natural/show
+                             input.version.major}.${Natural/show
+                                                      input.version.minor}.${Natural/show
+                                                                               input.version.patch}"
                     , dbName = input.name.inSnakeCase
                     , deadpool = config.deadpool
                     }
@@ -147,7 +145,7 @@ let combineOutputs =
                   Templates.TypesModule.run { typeModNames, typeReexports }
               }
 
-        let crateName = input.space.inSnakeCase ++ "_" ++ input.name.inSnakeCase
+        let crateName = "${input.space.inSnakeCase}_${input.name.inSnakeCase}"
 
         let stmtTests =
               Prelude.Text.concatMapSep
@@ -160,7 +158,9 @@ let combineOutputs =
                         let pool = shared_pool().await;
                         execute_preparing(
                             &pool,
-                            ${Lude.Text.indent 8 ("&" ++ query.testInputExpr)}
+                            ${Lude.Text.indentNonEmpty
+                                8
+                                "&${query.testInputExpr}"}
                         )
                         .await
                         .unwrap_or_else(|e| panic!("Statement should execute successfully: {e}"));

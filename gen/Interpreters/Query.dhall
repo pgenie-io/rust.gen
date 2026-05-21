@@ -118,7 +118,7 @@ let render =
                 params
 
         let sqlDocLines =
-              "/// " ++ Lude.Text.prefixEachLine "/// " fragments.docComment
+              "/// ${Lude.Text.prefixEachLine "/// " fragments.docComment}"
 
         let hasParams = Prelude.List.null MemberModule.Output params == False
 
@@ -133,19 +133,16 @@ let render =
                 "\n"
                 MemberModule.Output
                 ( \(member : MemberModule.Output) ->
-                    "    ${member.fieldName}: ${member.testValueExpr},"
+                    "${member.fieldName}: ${member.testValueExpr},"
                 )
                 params
 
         let testInputExpr =
               if    hasParams
-              then      ''
-                        statements::${statementModuleName}::Input {
-                        ''
-                    ++  testParamFields
-                    ++  ''
-
-                        }''
+              then  ''
+                    statements::${statementModuleName}::Input {
+                        ${Lude.Text.indentNonEmpty 4 testParamFields}
+                    }''
               else  "statements::${statementModuleName}::Input::default()"
 
         let statementModuleContents =

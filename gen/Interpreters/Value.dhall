@@ -47,16 +47,15 @@ let run =
 
                     let arrayPgType =
                           if    scalar.hasKnownPgType
-                          then  scalar.pgType ++ "_ARRAY"
+                          then  "${scalar.pgType}_ARRAY"
                           else  scalar.pgType
 
                     let arrayPgCastSuffix =
                           if    scalar.hasKnownPgType
                           then  ""
-                          else      scalar.pgCastSuffix
-                                ++  Prelude.Text.replicate
-                                      arraySettings.dimensionality
-                                      "[]"
+                          else  "${scalar.pgCastSuffix}${Prelude.Text.replicate
+                                                           arraySettings.dimensionality
+                                                           "[]"}"
 
                     let elementTestValue =
                           if    arraySettings.elementIsNullable

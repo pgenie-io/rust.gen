@@ -1,3 +1,5 @@
+let Lude = ../Deps/Lude.dhall
+
 let Prelude = ../Deps/Prelude.dhall
 
 let Field = { pgName : Text, fieldName : Text, fieldType : Text }
@@ -12,14 +14,14 @@ let Params =
 let run =
       \(params : Params) ->
         let fieldDecls =
-              Prelude.Text.concatMap
+              Prelude.Text.concatMapSep
+                "\n"
                 Field
                 ( \(field : Field) ->
                     ''
-                        /// Maps to `${field.pgName}`.
-                        #[postgres(name = "${field.pgName}")]
-                        pub ${field.fieldName}: ${field.fieldType},
-                    ''
+                    /// Maps to `${field.pgName}`.
+                    #[postgres(name = "${field.pgName}")]
+                    pub ${field.fieldName}: ${field.fieldType},''
                 )
                 params.fields
 
@@ -30,7 +32,8 @@ let run =
             #[derive(Debug, Clone, PartialEq, Default, ToSql, FromSql)]
             #[postgres(name = "${params.pgTypeName}")]
             pub struct ${params.typeName} {
-            ${fieldDecls}}
+                ${Lude.Text.indentNonEmpty 4 fieldDecls}
+            }
             ''
 
 in  { Params, Field, run }

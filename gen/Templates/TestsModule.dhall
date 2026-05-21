@@ -91,7 +91,7 @@ in  Algebra.Template.module
 
           async fn apply_migrations(host_port: u16) {
               const MIGRATIONS: &[(&str, &str)] = &[
-                  ${Lude.Text.indent 8 params.migrationEntries}
+                  ${Lude.Text.indentNonEmpty 8 params.migrationEntries}
               ];
 
               let (client, conn) = tokio_postgres::connect(

@@ -39,34 +39,31 @@ let renderSqlExp
       \(castSuffixes : List Text) ->
         let rawSql
             : Text
-            =     "\""
-              ++  Prelude.Text.concatMap
-                    Project.QueryFragment
-                    ( \(queryFragment : Project.QueryFragment) ->
-                        merge
-                          { Sql = escapeRustString
-                          , Var =
-                              \(var : Project.Var) ->
-                                let suffix =
-                                      Prelude.Optional.fold
-                                        Text
-                                        ( Prelude.List.index
-                                            var.paramIndex
-                                            Text
-                                            castSuffixes
-                                        )
-                                        Text
-                                        (\(s : Text) -> s)
-                                        ""
+            = "\"${Prelude.Text.concatMap
+                     Project.QueryFragment
+                     ( \(queryFragment : Project.QueryFragment) ->
+                         merge
+                           { Sql = escapeRustString
+                           , Var =
+                               \(var : Project.Var) ->
+                                 let suffix =
+                                       Prelude.Optional.fold
+                                         Text
+                                         ( Prelude.List.index
+                                             var.paramIndex
+                                             Text
+                                             castSuffixes
+                                         )
+                                         Text
+                                         (\(s : Text) -> s)
+                                         ""
 
-                                in      "\$"
-                                    ++  Natural/show (var.paramIndex + 1)
-                                    ++  suffix
-                          }
-                          queryFragment
-                    )
-                    fragments
-              ++  "\""
+                                 in  "\$${Natural/show
+                                            (var.paramIndex + 1)}${suffix}"
+                           }
+                           queryFragment
+                     )
+                     fragments}\""
 
         in  quotePostgresKeywordCasts rawSql
 
@@ -77,7 +74,7 @@ let renderDocComment
         ( \(queryFragment : Project.QueryFragment) ->
             merge
               { Sql = Prelude.Function.identity Text
-              , Var = \(var : Project.Var) -> "\$" ++ var.rawName
+              , Var = \(var : Project.Var) -> "\$${var.rawName}"
               }
               queryFragment
         )
