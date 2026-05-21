@@ -1,3 +1,1 @@
-let Sdk = ./Deps/GenSdk.dhall
-
-in  Sdk.module { major = 2, minor = 0 } ./Config.dhall ./compile.dhall
+let Sdk = ./Deps/GenSdk.dhall in Sdk.module ./Config.dhall ./compile.dhall
