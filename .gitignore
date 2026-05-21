@@ -1,19 +1,25 @@
-# Dhall
-.dhall-cache/
-*.dhall-cache
-*.dhallb
+# We apply the Gitignore Whitelist approach here.
+# Everything but a specific list of files and directories listed here gets ignored.
+# 
+# More on the approach: https://jasonstitt.com/gitignore-whitelisting-patterns.
 
-# Rust (demo-output build artifacts)
-demo-output/target/
-demo-output/Cargo.lock
+# Ignore everything in the root folder:
+/*
 
-# OS
+# Unignore a specific list of files in the root folder:
+!/.gitignore
+!/LICENSE
+!/README.md
+!/CHANGELOG.md
+
+# Unignore subtrees:
+!/.github/
+!/design/
+!/src/
+!/gen/
+!/tests/
+!/.github/
+!/demo-output/
+
+# Ignore noise:
 .DS_Store
-Thumbs.db
-
-# Editor
-*.swp
-*.swo
-*~
-.idea/
-.vscode/
