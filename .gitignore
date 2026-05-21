@@ -19,7 +19,6 @@
 !/gen/
 !/tests/
 !/.github/
-!/demo-output/
 
 # Ignore noise:
 .DS_Store
