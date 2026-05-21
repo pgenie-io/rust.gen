@@ -127,7 +127,7 @@ jobs:
 
       - name: Resolve Dhall
         id: resolve
-        uses: nikita-volkov/dhall-resolve.github-action@v1
+        uses: nikita-volkov/dhall-resolve.github-action@v3
         with:
           file: gen/Gen.dhall
           cse: true
