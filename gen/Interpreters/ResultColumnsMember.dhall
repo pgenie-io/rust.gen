@@ -4,6 +4,8 @@ let Lude = ../Deps/Lude.dhall
 
 let Member = ./Member.dhall
 
+let Templates = ../Templates/package.dhall
+
 let Input = Member.Input
 
 let Output =
@@ -18,7 +20,12 @@ let run =
           ( \(member : Member.Output) ->
               { fieldName = member.fieldName
               , fieldType = member.fieldType
-              , columnFieldDeclaration = member.columnFieldDeclaration
+              , columnFieldDeclaration =
+                  Templates.ColumnField.run
+                    { pgName = member.pgName
+                    , fieldName = member.fieldName
+                    , fieldType = member.fieldType
+                    }
               }
           )
           (Member.run config input)

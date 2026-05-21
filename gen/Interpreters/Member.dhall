@@ -13,8 +13,6 @@ let Input = Project.Member
 let Output =
       { fieldName : Text
       , fieldType : Text
-      , paramFieldDeclaration : Text
-      , columnFieldDeclaration : Text
       , pgName : Text
       , paramExpr : Text
       , pgType : Text
@@ -43,20 +41,8 @@ let run =
                       then  "Some(${value.testValueExpr})"
                       else  value.testValueExpr
 
-                let paramFieldDeclaration =
-                      ''
-                      /// Maps to `$${input.pgName}` in the template.
-                      pub ${fieldName}: ${fieldType},''
-
-                let columnFieldDeclaration =
-                      ''
-                      /// Maps to the `${input.pgName}` result set column.
-                      pub ${fieldName}: ${fieldType},''
-
                 in  { fieldName
                     , fieldType
-                    , paramFieldDeclaration
-                    , columnFieldDeclaration
                     , pgName = input.pgName
                     , paramExpr = "&self.${fieldName}"
                     , pgType = value.pgType

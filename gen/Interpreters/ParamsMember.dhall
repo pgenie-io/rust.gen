@@ -9,7 +9,7 @@ let Input = Member.Input
 let Output =
       { fieldName : Text
       , fieldType : Text
-      , paramFieldDeclaration : Text
+      , pgName : Text
       , paramExpr : Text
       , pgType : Text
       , pgCastSuffix : Text
@@ -26,7 +26,7 @@ let run =
           ( \(member : Member.Output) ->
               { fieldName = member.fieldName
               , fieldType = member.fieldType
-              , paramFieldDeclaration = member.paramFieldDeclaration
+              , pgName = member.pgName
               , paramExpr = member.paramExpr
               , pgType = member.pgType
               , pgCastSuffix = member.pgCastSuffix
