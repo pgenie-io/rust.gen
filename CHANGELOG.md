@@ -1,8 +1,22 @@
+# Upcoming
+
+## Breaking
+
+- Contract updated to v2.0
+
+## Fixes
+
+- Java keywords escaping
+
+---
+
 # v0.2.1
 
 ## Backwards compatible changes:
 
 - Optional deadpool-postgres integration for generated crates. The mapping layer now exposes `Statement::execute_preparing` and `Statement::execute_without_preparing`, adds a unified `mapping::Error` type, and includes `deadpool-postgres` in generated dependencies when the integration is enabled.
+
+---
 
 # v0.1.1
 
