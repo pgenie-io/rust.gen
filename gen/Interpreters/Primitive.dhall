@@ -59,8 +59,7 @@ let run =
           , Daterange = unsupportedType "daterange"
           , Float4 = known "f32" "Type::FLOAT4" True
           , Float8 = known "f64" "Type::FLOAT8" True
-          , Hstore =
-              inferred "std::collections::HashMap<String, Option<String>>"
+          , Hstore = unsupportedType "hstore"
           , Inet = known "cidr::IpInet" "Type::INET" False
           , Int2 = known "i16" "Type::INT2" True
           , Int4 = known "i32" "Type::INT4" True

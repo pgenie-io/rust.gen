@@ -25,6 +25,45 @@ let Output =
       , canDeriveDefault : Bool
       }
 
+let isMultiDimensional =
+      \(value : Project.Value) ->
+        merge
+          { Some =
+              \(arraySettings : Project.ArraySettings) ->
+                    Natural/isZero
+                      (Natural/subtract 1 arraySettings.dimensionality)
+                ==  False
+          , None = False
+          }
+          value.arraySettings
+
+let queryHasMultiDimensionalArray =
+      \(input : Input) ->
+        let paramsHaveMultiDimensional =
+              Prelude.List.any
+                Project.Member
+                (\(member : Project.Member) -> isMultiDimensional member.value)
+                input.params
+
+        let resultColumnsHaveMultiDimensional =
+              merge
+                { Some =
+                    \(resultRows : Project.ResultRows) ->
+                      Prelude.List.any
+                        Project.Member
+                        ( \(member : Project.Member) ->
+                            isMultiDimensional member.value
+                        )
+                        ( Prelude.NonEmpty.toList
+                            Project.Member
+                            resultRows.columns
+                        )
+                , None = False
+                }
+                input.result
+
+        in  paramsHaveMultiDimensional || resultColumnsHaveMultiDimensional
+
 let render =
       \(config : Algebra.Interpreter.Config) ->
       \(input : Input) ->
@@ -110,39 +149,44 @@ let render =
 let run =
       \(config : Algebra.Interpreter.Config) ->
       \(input : Input) ->
-        Lude.Compiled.nest
-          Output
-          input.srcPath
-          ( Typeclasses.Classes.Applicative.map3
-              Lude.Compiled.Type
-              Lude.Compiled.applicative
-              ResultModule.Output
-              QueryFragmentsModule.Output
-              (List MemberModule.Output)
-              Output
-              (render config input)
-              ( Lude.Compiled.nest
-                  ResultModule.Output
-                  "result"
-                  (ResultModule.run config input.result)
-              )
-              ( Lude.Compiled.nest
-                  QueryFragmentsModule.Output
-                  "sql"
-                  (QueryFragmentsModule.run config input.fragments)
-              )
-              ( Lude.Compiled.nest
-                  (List MemberModule.Output)
-                  "params"
-                  ( Typeclasses.Classes.Applicative.traverseList
-                      Lude.Compiled.Type
-                      Lude.Compiled.applicative
-                      Project.Member
-                      MemberModule.Output
-                      (MemberModule.run config)
-                      input.params
-                  )
-              )
-          )
+        if    queryHasMultiDimensionalArray input
+        then  Lude.Compiled.report
+                Output
+                [ input.srcPath ]
+                "Multidimensional arrays are not supported by tokio-postgres; skipping statement"
+        else  Lude.Compiled.nest
+                Output
+                input.srcPath
+                ( Typeclasses.Classes.Applicative.map3
+                    Lude.Compiled.Type
+                    Lude.Compiled.applicative
+                    ResultModule.Output
+                    QueryFragmentsModule.Output
+                    (List MemberModule.Output)
+                    Output
+                    (render config input)
+                    ( Lude.Compiled.nest
+                        ResultModule.Output
+                        "result"
+                        (ResultModule.run config input.result)
+                    )
+                    ( Lude.Compiled.nest
+                        QueryFragmentsModule.Output
+                        "sql"
+                        (QueryFragmentsModule.run config input.fragments)
+                    )
+                    ( Lude.Compiled.nest
+                        (List MemberModule.Output)
+                        "params"
+                        ( Typeclasses.Classes.Applicative.traverseList
+                            Lude.Compiled.Type
+                            Lude.Compiled.applicative
+                            Project.Member
+                            MemberModule.Output
+                            (MemberModule.run config)
+                            input.params
+                        )
+                    )
+                )
 
 in  Algebra.Interpreter.module Input Output run
