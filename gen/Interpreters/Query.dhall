@@ -23,6 +23,7 @@ let Output =
       , statementModulePath : Text
       , statementModuleContents : Text
       , canDeriveDefault : Bool
+      , testInputExpr : Text
       }
 
 let isMultiDimensional =
@@ -127,6 +128,26 @@ let render =
                 (\(member : MemberModule.Output) -> member.supportsDefault)
                 params
 
+        let testParamFields =
+              Prelude.Text.concatMapSep
+                "\n"
+                MemberModule.Output
+                ( \(member : MemberModule.Output) ->
+                    "    ${member.fieldName}: ${member.testValueExpr},"
+                )
+                params
+
+        let testInputExpr =
+              if    hasParams
+              then      ''
+                        statements::${statementModuleName}::Input {
+                        ''
+                    ++  testParamFields
+                    ++  ''
+
+                        }''
+              else  "statements::${statementModuleName}::Input::default()"
+
         let statementModuleContents =
               Templates.StatementModule.run
                 { queryName
@@ -144,6 +165,7 @@ let render =
             , statementModulePath
             , statementModuleContents
             , canDeriveDefault
+            , testInputExpr
             }
 
 let run =

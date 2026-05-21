@@ -1,6 +1,8 @@
+let Lude = ../Deps/Lude.dhall
+
 let Algebra = ../Algebras/package.dhall
 
-let Params = { crateName : Text, migrationEntries : Text, stmtAsserts : Text }
+let Params = { crateName : Text, migrationEntries : Text, stmtTests : Text }
 
 in  Algebra.Template.module
       Params
@@ -8,14 +10,38 @@ in  Algebra.Template.module
           ''
           use std::error::Error;
 
-          use ${params.crateName}::mapping::Statement;
           use ${params.crateName}::statements;
           use testcontainers::runners::AsyncRunner as _;
 
-          async fn setup_pool() -> (
-              deadpool_postgres::Pool,
-              testcontainers::ContainerAsync<testcontainers_modules::postgres::Postgres>,
-          ) {
+          struct SharedTestContext {
+              pool: deadpool_postgres::Pool,
+              _container: testcontainers::ContainerAsync<testcontainers_modules::postgres::Postgres>,
+          }
+
+          static SHARED_TEST_CONTEXT: tokio::sync::OnceCell<std::sync::Mutex<Option<SharedTestContext>>> =
+              tokio::sync::OnceCell::const_new();
+
+          #[dtor::dtor(unsafe, method = at_module_exit)]
+          fn cleanup_shared_test_context() {
+              if let Some(context) = SHARED_TEST_CONTEXT.get() {
+                  if let Some(context) = context.lock().unwrap().take() {
+                      std::thread::spawn(move || {
+                          let runtime = tokio::runtime::Builder::new_current_thread()
+                              .enable_all()
+                              .build()
+                              .expect("Failed to build cleanup runtime");
+
+                          runtime.block_on(async move {
+                              drop(context);
+                          });
+                      })
+                      .join()
+                      .expect("Failed to join cleanup thread");
+                  }
+              }
+          }
+
+          async fn setup_pool() -> std::sync::Mutex<Option<SharedTestContext>> {
               let container = testcontainers_modules::postgres::Postgres::default()
                   .start()
                   .await
@@ -27,6 +53,9 @@ in  Algebra.Template.module
                   .expect("Failed to get host port");
 
               let mut cfg = deadpool_postgres::Config::new();
+              cfg.manager = Some(deadpool_postgres::ManagerConfig {
+                  recycling_method: deadpool_postgres::RecyclingMethod::Verified,
+              });
               cfg.host = Some("127.0.0.1".to_string());
               cfg.port = Some(host_port);
               cfg.user = Some("postgres".to_string());
@@ -42,12 +71,27 @@ in  Algebra.Template.module
 
               apply_migrations(host_port).await;
 
-              (pool, container)
+              std::sync::Mutex::new(Some(SharedTestContext {
+                  pool,
+                  _container: container,
+              }))
+          }
+
+          async fn shared_pool() -> deadpool_postgres::Pool {
+              SHARED_TEST_CONTEXT
+                  .get_or_init(setup_pool)
+                  .await
+                  .lock()
+                  .unwrap()
+                  .as_ref()
+                  .expect("Shared test context should be initialized")
+                  .pool
+                  .clone()
           }
 
           async fn apply_migrations(host_port: u16) {
               const MIGRATIONS: &[(&str, &str)] = &[
-          ${params.migrationEntries}
+                  ${Lude.Text.indent 8 params.migrationEntries}
               ];
 
               let (client, conn) = tokio_postgres::connect(
@@ -110,20 +154,6 @@ in  Algebra.Template.module
               }
           }
 
-          async fn assert_statement_executes<S>(pool: &deadpool_postgres::Pool, stmt_name: &str)
-          where
-              S: Statement + Default,
-          {
-              let statement = S::default();
-              execute_preparing(pool, &statement)
-                  .await
-                  .unwrap_or_else(|e| panic!("Statement {stmt_name} should execute successfully: {e}"));
-          }
-
-          #[tokio::test]
-          async fn all_defaultable_declared_statements_execute_with_default_values() {
-              let (pool, _container) = setup_pool().await;
-          ${params.stmtAsserts}
-          }
+          ${params.stmtTests}
           ''
       )

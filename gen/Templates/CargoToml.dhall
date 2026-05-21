@@ -49,6 +49,7 @@ in  Algebra.Template.module
               uuid = "1"
 
               [dev-dependencies]
+                  dtor = "1"
               deadpool-postgres = "0.14.1"
               tokio = { version = "1", features = ["full"] }
               testcontainers = "0.27.1"

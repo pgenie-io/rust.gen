@@ -14,6 +14,7 @@ let Output =
       , pgType : Text
       , pgCastSuffix : Text
       , supportsDefault : Bool
+      , testValueExpr : Text
       }
 
 let run =
@@ -30,6 +31,7 @@ let run =
               , pgType = member.pgType
               , pgCastSuffix = member.pgCastSuffix
               , supportsDefault = member.supportsDefault
+              , testValueExpr = member.testValueExpr
               }
           )
           (Member.run config input)

@@ -20,6 +20,7 @@ let Output =
       , pgType : Text
       , pgCastSuffix : Text
       , supportsDefault : Bool
+      , testValueExpr : Text
       }
 
 let run =
@@ -36,6 +37,11 @@ let run =
                       if input.isNullable then "Option<${sig}>" else sig
 
                 let supportsDefault = input.isNullable || value.supportsDefault
+
+                let testValueExpr =
+                      if    input.isNullable
+                      then  "Some(${value.testValueExpr})"
+                      else  value.testValueExpr
 
                 let indent = "    "
 
@@ -76,6 +82,7 @@ let run =
                     , pgType = value.pgType
                     , pgCastSuffix = value.pgCastSuffix
                     , supportsDefault
+                    , testValueExpr
                     }
 
         in  Lude.Compiled.map2

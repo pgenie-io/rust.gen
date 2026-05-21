@@ -16,6 +16,7 @@ let Output =
       , pgCastSuffix : Text
       , hasKnownPgType : Bool
       , supportsDefault : Bool
+      , testValueExpr : Text
       }
 
 let Result = Lude.Compiled.Type Output
@@ -57,6 +58,18 @@ let run =
                                       arraySettings.dimensionality
                                       "[]"
 
+                    let elementTestValue =
+                          if    arraySettings.elementIsNullable
+                          then  "Some(${scalar.testValueExpr})"
+                          else  scalar.testValueExpr
+
+                    let arrayTestValue =
+                          Natural/fold
+                            arraySettings.dimensionality
+                            Text
+                            (\(inner : Text) -> "vec![${inner}]")
+                            elementTestValue
+
                     in  Lude.Compiled.ok
                           Output
                           { sig = arraySig
@@ -64,6 +77,7 @@ let run =
                           , pgCastSuffix = arrayPgCastSuffix
                           , hasKnownPgType = scalar.hasKnownPgType
                           , supportsDefault = True
+                          , testValueExpr = arrayTestValue
                           }
                 )
                 ( Lude.Compiled.ok
@@ -73,6 +87,7 @@ let run =
                     , pgCastSuffix = scalar.pgCastSuffix
                     , hasKnownPgType = scalar.hasKnownPgType
                     , supportsDefault = scalar.supportsDefault
+                    , testValueExpr = scalar.testValueExpr
                     }
                 )
           )

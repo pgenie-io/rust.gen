@@ -149,14 +149,23 @@ let combineOutputs =
 
         let crateName = input.space.inSnakeCase ++ "_" ++ input.name.inSnakeCase
 
-        let stmtAsserts =
+        let stmtTests =
               Prelude.Text.concatMapSep
-                "\n"
+                "\n\n"
                 QueryGen.Output
                 ( \(query : QueryGen.Output) ->
-                    if    query.canDeriveDefault
-                    then  "    assert_statement_executes::<statements::${query.statementModuleName}::Input>(&pool, \"${query.statementModuleName}\").await;"
-                    else  ""
+                    ''
+                    #[tokio::test]
+                    async fn ${query.statementModuleName}_executes_with_realistic_values() {
+                        let pool = shared_pool().await;
+                        execute_preparing(
+                            &pool,
+                            ${Lude.Text.indent 8 ("&" ++ query.testInputExpr)}
+                        )
+                        .await
+                        .unwrap_or_else(|e| panic!("Statement should execute successfully: {e}"));
+                    }
+                    ''
                 )
                 queries
 
@@ -166,7 +175,7 @@ let combineOutputs =
                 "\n"
                 { name : Text, sql : Text }
                 ( \(migration : { name : Text, sql : Text }) ->
-                    "        (\"${migration.name}.sql\", include_str!(\"../migrations/${migration.name}.sql\")),"
+                    "(\"${migration.name}.sql\", include_str!(\"../migrations/${migration.name}.sql\")),"
                 )
                 input.migrations
 
@@ -175,7 +184,7 @@ let combineOutputs =
             = { path = "tests/tests.rs"
               , content =
                   Templates.TestsModule.run
-                    { crateName, migrationEntries, stmtAsserts }
+                    { crateName, migrationEntries, stmtTests }
               }
 
         in      [ cargoToml

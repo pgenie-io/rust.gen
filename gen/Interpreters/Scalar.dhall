@@ -14,6 +14,7 @@ let Output =
       , pgCastSuffix : Text
       , hasKnownPgType : Bool
       , supportsDefault : Bool
+      , testValueExpr : Text
       }
 
 let run =
@@ -33,6 +34,7 @@ let run =
                       , pgCastSuffix = "::public.${pgName}"
                       , hasKnownPgType = False
                       , supportsDefault = False
+                      , testValueExpr = "Default::default()"
                       }
           }
           input
