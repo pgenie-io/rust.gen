@@ -15,9 +15,11 @@
 , ParamField = ./ParamField.dhall
 , ResultTypeAlias = ./ResultTypeAlias.dhall
 , StatementImplNoResult = ./StatementImplNoResult.dhall
+, StatementImplVoid = ./StatementImplVoid.dhall
 , StatementImplWithResult = ./StatementImplWithResult.dhall
 , StatementModule = ./StatementModule.dhall
 , StatementsModule = ./StatementsModule.dhall
 , TestsModule = ./TestsModule.dhall
 , TypesModule = ./TypesModule.dhall
+, VoidResultTypeDecls = ./VoidResultTypeDecls.dhall
 }

@@ -24,6 +24,9 @@ let Output =
       , testInputExpr : Text
       }
 
+let ResultInterpretation =
+      < Void | RowsAffected | Rows : ResultRowsModule.Output >
+
 let isMultiDimensional =
       \(value : Project.Value) ->
         merge
@@ -46,7 +49,9 @@ let queryHasMultiDimensionalArray =
 
         let resultColumnsHaveMultiDimensional =
               merge
-                { Some =
+                { Void = False
+                , RowsAffected = False
+                , Rows =
                     \(resultRows : Project.ResultRows) ->
                       Prelude.List.any
                         Project.Member
@@ -57,7 +62,6 @@ let queryHasMultiDimensionalArray =
                             Project.Member
                             resultRows.columns
                         )
-                , None = False
                 }
                 input.result
 
@@ -120,7 +124,7 @@ let renderDocComment
 let render =
       \(config : Algebra.Interpreter.Config) ->
       \(input : Input) ->
-      \(resultRows : Optional ResultRowsModule.Output) ->
+      \(resultInterpretation : ResultInterpretation) ->
       \(params : List MemberModule.Output) ->
         let statementModuleName = input.name.inSnakeCase
 
@@ -170,13 +174,19 @@ let render =
 
         let result =
               merge
-                { None =
+                { Void =
+                  { typeDecls = Templates.VoidResultTypeDecls.run {=}
+                  , statementImpl =
+                      Templates.StatementImplVoid.run
+                        { sqlExp, paramTypes = paramTypesText, paramExprs }
+                  }
+                , RowsAffected =
                   { typeDecls = Templates.NoResultTypeDecls.run {=}
                   , statementImpl =
                       Templates.StatementImplNoResult.run
                         { sqlExp, paramTypes = paramTypesText, paramExprs }
                   }
-                , Some =
+                , Rows =
                     \(rows : ResultRowsModule.Output) ->
                       let rowTypeDecl =
                             Templates.OutputRowStruct.run
@@ -223,7 +233,7 @@ let render =
 
                       in  { typeDecls, statementImpl }
                 }
-                resultRows
+                resultInterpretation
 
         let sqlDocLines = "/// ${Lude.Text.prefixEachLine "/// " docComment}"
 
@@ -286,24 +296,30 @@ let run =
                 ( Typeclasses.Classes.Applicative.map2
                     Lude.Compiled.Type
                     Lude.Compiled.applicative
-                    (Optional ResultRowsModule.Output)
+                    ResultInterpretation
                     (List MemberModule.Output)
                     Output
                     (render config input)
                     ( Lude.Compiled.nest
-                        (Optional ResultRowsModule.Output)
+                        ResultInterpretation
                         "result"
                         ( merge
-                            { None =
+                            { Void =
                                 Lude.Compiled.ok
-                                  (Optional ResultRowsModule.Output)
-                                  (None ResultRowsModule.Output)
-                            , Some =
+                                  ResultInterpretation
+                                  ResultInterpretation.Void
+                            , RowsAffected =
+                                Lude.Compiled.ok
+                                  ResultInterpretation
+                                  ResultInterpretation.RowsAffected
+                            , Rows =
                                 \(resultRowsInput : Project.ResultRows) ->
                                   Lude.Compiled.map
                                     ResultRowsModule.Output
-                                    (Optional ResultRowsModule.Output)
-                                    (\(o : ResultRowsModule.Output) -> Some o)
+                                    ResultInterpretation
+                                    ( \(o : ResultRowsModule.Output) ->
+                                        ResultInterpretation.Rows o
+                                    )
                                     ( ResultRowsModule.run
                                         config
                                         resultRowsInput
