@@ -18,6 +18,88 @@ The plugin produces a self-contained Rust crate containing:
   - **Composite types** → Rust `struct` declarations with `#[derive(ToSql, FromSql)]` and per-field `#[postgres(name = "...")]` attributes.
 - **`src/types.rs`** – a module re-exporting all type modules.
 
+## Using the plugin in a pGenie project
+
+Add the plugin to your pGenie project configuration file:
+
+```yaml
+space: my_space
+name: music_catalogue
+version: 1.0.0
+artifacts:
+  rust:
+    gen: https://github.com/pgenie-io/rust.gen/releases/download/v0.3.0/resolved.dhall
+    config:
+      deadpool: true # Provide deadpool integration with prepared statement caching. `false` by default.
+```
+
+Run the code generator:
+
+```bash
+pgn generate
+```
+
+The generated crate will be placed in `artifacts/rust/`.
+
+## Using the generated code
+
+The generated crate is designed to be used directly from application code or from
+integration tests. A small helper like `execute_preparing` can hide the boilerplate
+of preparing statements, binding parameters, and decoding results while still
+keeping the generated API visible.
+
+The example below shows the pattern used in the demo tests: obtain a
+`deadpool_postgres::Pool`, pull a client from the pool, and execute the generated
+statements through the `Statement` helpers.
+
+```rust
+use chrono::NaiveDate;
+use my_space_music_catalogue::mapping::Statement;
+use my_space_music_catalogue::statements;
+use my_space_music_catalogue::types;
+
+async fn example(
+  pool: &deadpool_postgres::Pool,
+) -> Result<(), my_space_music_catalogue::mapping::Error> {
+  let client = pool.get().await?;
+
+  let inserted = statements::insert_album::Input {
+    name: "Space Jazz Vol. 1".to_string(),
+    released: NaiveDate::from_ymd_opt(2020, 5, 4).unwrap(),
+    format: types::AlbumFormat::Vinyl,
+    recording: types::RecordingInfo {
+      studio_name: Some("Galactic Studio".to_string()),
+      city: Some("Lunar City".to_string()),
+      country: Some("Moon".to_string()),
+      recorded_date: Some(NaiveDate::from_ymd_opt(2019, 12, 1).unwrap()),
+    },
+  }
+  .execute_preparing(&client)
+  .await?;
+
+  println!("Inserted album id={}", inserted.id);
+
+  let rows = statements::select_album_by_name::Input {
+    name: "Space Jazz Vol. 1".to_string(),
+  }
+  .execute_without_preparing(&client)
+  .await?;
+
+  for row in rows {
+    println!(
+      "Found album id={} name={} released={:?} format={:?} recording={:?}",
+      row.id, row.name, row.released, row.format, row.recording
+    );
+  }
+
+  Ok(())
+}
+```
+
+Use `execute_preparing` when you want deadpool's prepared-statement cache, and
+`execute_without_preparing` when you need a path that stays compatible with
+proxies that do not support prepared statements.
+
 ## Supported PostgreSQL types
 
 Following is a summary of the supported PostgreSQL types and their Rust equivalents, using the
@@ -124,85 +206,3 @@ To check the generator against the demo fixture:
 ```bash
 dhall --file tests/Demo.dhall
 ```
-
-## Using the plugin in a pGenie project
-
-Add the plugin to your pGenie project configuration file:
-
-```yaml
-space: my_space
-name: music_catalogue
-version: 1.0.0
-artifacts:
-  rust:
-    gen: https://github.com/pgenie-io/rust.gen/releases/download/v0.3.0/resolved.dhall
-    config:
-      deadpool: true # Provide deadpool integration with prepared statement caching. `false` by default.
-```
-
-Run the code generator:
-
-```bash
-pgn generate
-```
-
-The generated crate will be placed in `artifacts/rust/`.
-
-## Using the generated code
-
-The generated crate is designed to be used directly from application code or from
-integration tests. A small helper like `execute_preparing` can hide the boilerplate
-of preparing statements, binding parameters, and decoding results while still
-keeping the generated API visible.
-
-The example below shows the pattern used in the demo tests: obtain a
-`deadpool_postgres::Pool`, pull a client from the pool, and execute the generated
-statements through the `Statement` helpers.
-
-```rust
-use chrono::NaiveDate;
-use my_space_music_catalogue::mapping::Statement;
-use my_space_music_catalogue::statements;
-use my_space_music_catalogue::types;
-
-async fn example(
-  pool: &deadpool_postgres::Pool,
-) -> Result<(), my_space_music_catalogue::mapping::Error> {
-  let client = pool.get().await?;
-
-  let inserted = statements::insert_album::Input {
-    name: "Space Jazz Vol. 1".to_string(),
-    released: NaiveDate::from_ymd_opt(2020, 5, 4).unwrap(),
-    format: types::AlbumFormat::Vinyl,
-    recording: types::RecordingInfo {
-      studio_name: Some("Galactic Studio".to_string()),
-      city: Some("Lunar City".to_string()),
-      country: Some("Moon".to_string()),
-      recorded_date: Some(NaiveDate::from_ymd_opt(2019, 12, 1).unwrap()),
-    },
-  }
-  .execute_preparing(&client)
-  .await?;
-
-  println!("Inserted album id={}", inserted.id);
-
-  let rows = statements::select_album_by_name::Input {
-    name: "Space Jazz Vol. 1".to_string(),
-  }
-  .execute_without_preparing(&client)
-  .await?;
-
-  for row in rows {
-    println!(
-      "Found album id={} name={} released={:?} format={:?} recording={:?}",
-      row.id, row.name, row.released, row.format, row.recording
-    );
-  }
-
-  Ok(())
-}
-```
-
-Use `execute_preparing` when you want deadpool's prepared-statement cache, and
-`execute_without_preparing` when you need a path that stays compatible with
-proxies that do not support prepared statements.
