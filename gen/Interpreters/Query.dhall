@@ -22,6 +22,8 @@ let Output =
       , statementModuleContents : Text
       , canDeriveDefault : Bool
       , testInputExpr : Text
+      , isIdentity : Bool
+      , identityTestExpectedExpr : Optional Text
       }
 
 let ResultInterpretation =
@@ -262,6 +264,38 @@ let render =
                     }''
               else  "statements::${statementModuleName}::Input::default()"
 
+        let identityTestExpectedExpr =
+              merge
+                { Void = None Text
+                , RowsAffected = None Text
+                , Rows =
+                    \(rows : ResultRowsModule.Output) ->
+                      if    input.identity == False
+                      then  None Text
+                      else  let rowFields =
+                                  Prelude.Text.concatMapSep
+                                    ", "
+                                    MemberModule.Output
+                                    ( \(member : MemberModule.Output) ->
+                                        "${member.fieldName}: ${member.testValueExpr}"
+                                    )
+                                    params
+
+                            let rowExpr =
+                                  "statements::${statementModuleName}::OutputRow { ${rowFields} }"
+
+                            let wrappedExpr =
+                                  merge
+                                    { Single = rowExpr
+                                    , Optional = "Some(${rowExpr})"
+                                    , Multiple = "vec![${rowExpr}]"
+                                    }
+                                    rows.cardinality
+
+                            in  Some wrappedExpr
+                }
+                resultInterpretation
+
         let statementModuleContents =
               Templates.StatementModule.run
                 { queryName
@@ -280,6 +314,8 @@ let render =
             , statementModuleContents
             , canDeriveDefault
             , testInputExpr
+            , isIdentity = input.identity
+            , identityTestExpectedExpr
             }
 
 let run =

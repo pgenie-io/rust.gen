@@ -152,20 +152,37 @@ let combineOutputs =
                 "\n\n"
                 QueryGen.Output
                 ( \(query : QueryGen.Output) ->
-                    ''
-                    #[tokio::test]
-                    async fn ${query.statementModuleName}_executes_with_realistic_values() {
-                        let pool = shared_pool().await;
-                        execute_preparing(
-                            &pool,
-                            ${Lude.Text.indentNonEmpty
-                                8
-                                "&${query.testInputExpr}"}
-                        )
-                        .await
-                        .unwrap_or_else(|e| panic!("Statement should execute successfully: {e}"));
-                    }
-                    ''
+                    merge
+                      { None =
+                          ''
+                          #[tokio::test]
+                          async fn ${query.statementModuleName}_executes_with_realistic_values() {
+                              let pool = shared_pool().await;
+                              execute_preparing(
+                                  &pool,
+                                  ${Lude.Text.indentNonEmpty
+                                      8
+                                      "&${query.testInputExpr}"}
+                              )
+                              .await
+                              .unwrap_or_else(|e| panic!("Statement should execute successfully: {e}"));
+                          }
+                          ''
+                      , Some =
+                          \(expectedExpr : Text) ->
+                            ''
+                            #[tokio::test]
+                            async fn ${query.statementModuleName}_satisfies_identity_property() {
+                                let pool = shared_pool().await;
+                                let input = ${Lude.Text.indentNonEmpty
+                                                4
+                                                query.testInputExpr};
+                                let result = execute_preparing(&pool, &input).await.unwrap_or_else(|e| panic!("Statement should execute successfully: {e}"));
+                                assert_eq!(result, ${expectedExpr});
+                            }
+                            ''
+                      }
+                      query.identityTestExpectedExpr
                 )
                 queries
 
