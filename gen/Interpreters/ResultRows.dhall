@@ -19,6 +19,7 @@ let Output =
       , columnFieldDeclarations : Text
       , singleDecodeFields : Text
       , multipleDecodeFields : Text
+      , testRowFields : Text
       }
 
 let run =
@@ -85,6 +86,14 @@ let run =
                                 )
                                 indexedColumns
                             )
+                      , testRowFields =
+                          Prelude.Text.concatMapSep
+                            ", "
+                            Member.Output
+                            ( \(col : Member.Output) ->
+                                "${col.fieldName}: ${col.testValueExpr}"
+                            )
+                            columns
                       }
               )
               compiledColumns

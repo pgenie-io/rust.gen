@@ -272,14 +272,7 @@ let render =
                     \(rows : ResultRowsModule.Output) ->
                       if    input.identity == False
                       then  None Text
-                      else  let rowFields =
-                                  Prelude.Text.concatMapSep
-                                    ", "
-                                    MemberModule.Output
-                                    ( \(member : MemberModule.Output) ->
-                                        "${member.fieldName}: ${member.testValueExpr}"
-                                    )
-                                    params
+                      else  let rowFields = rows.testRowFields
 
                             let rowExpr =
                                   "statements::${statementModuleName}::OutputRow { ${rowFields} }"

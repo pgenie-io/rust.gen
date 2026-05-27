@@ -9,7 +9,11 @@ let Templates = ../Templates/package.dhall
 let Input = Member.Input
 
 let Output =
-      { fieldName : Text, fieldType : Text, columnFieldDeclaration : Text }
+      { fieldName : Text
+      , fieldType : Text
+      , columnFieldDeclaration : Text
+      , testValueExpr : Text
+      }
 
 let run =
       \(config : Algebra.Interpreter.Config) ->
@@ -26,6 +30,7 @@ let run =
                     , fieldName = member.fieldName
                     , fieldType = member.fieldType
                     }
+              , testValueExpr = member.testValueExpr
               }
           )
           (Member.run config input)
