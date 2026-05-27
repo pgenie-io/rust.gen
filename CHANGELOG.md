@@ -1,3 +1,9 @@
+# Upcoming
+
+## Non-breaking
+
+- Add identity test generation
+
 # v0.4.0
 
 ## Breaking
