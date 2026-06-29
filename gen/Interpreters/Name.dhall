@@ -1,7 +1,5 @@
 let Algebra = ../Algebras/Interpreter.dhall
 
-let Prelude = ../Deps/Prelude.dhall
-
 let Project = ../Deps/Project.dhall
 
 let Lude = ../Deps/Lude.dhall
@@ -9,6 +7,33 @@ let Lude = ../Deps/Lude.dhall
 let Input = Project.Name
 
 let Output = { fieldName : Text }
+
+let replaceTextIfEquals =
+    -- Text/equal is not available in this environment. We get full-string
+    -- equality out of the substring-based Text/replace by wrapping both sides
+    -- in a sentinel ("|", which cannot occur in an identifier): "|target|" is a
+    -- substring of "|original|" only when target == original, so the inner
+    -- replace fires exactly on an exact match. The outer replace strips the
+    -- sentinels back out.
+      \(target : Text) ->
+      \(replacement : Text) ->
+      \(original : Text) ->
+        let replacedWithSentinels =
+              Text/replace "|${target}|" "|${replacement}|" "|${original}|"
+
+        let replacedSansSentinels = Text/replace "|" "" replacedWithSentinels
+
+        in  replacedSansSentinels
+
+let replaceTextIfInList
+    : List Text -> Text -> Text -> Text
+    = \(candidates : List Text) ->
+      \(replacement : Text) ->
+        List/fold
+          Text
+          candidates
+          Text
+          (\(candidate : Text) -> replaceTextIfEquals candidate replacement)
 
 let rustKeywords
     : List Text
@@ -65,20 +90,14 @@ let rustKeywords
       , "yield"
       ]
 
-let isRustKeyword =
-      \(name : Input) ->
-        Prelude.List.any
-          Text
-          (\(kw : Text) -> Text/equal kw name.inSnakeCase)
-          rustKeywords
+let escapeRustKeyword
+    : Text -> Text
+    = \(text : Text) -> replaceTextIfInList rustKeywords (text ++ "_") text
 
 let run =
       \(config : Algebra.Config) ->
       \(input : Input) ->
-        let rawFieldName = input.inSnakeCase
-
-        let fieldName =
-              if isRustKeyword input then "${rawFieldName}_" else rawFieldName
+        let fieldName = escapeRustKeyword input.inSnakeCase
 
         in  Lude.Compiled.ok Output { fieldName }
 
