@@ -1,4 +1,6 @@
-let Algebra = ../Algebras/package.dhall
+let Sdk = ../Deps/Sdk.dhall
+
+let ResolvedTarget = ../ResolvedTarget.dhall
 
 let Lude = ../Deps/Lude.dhall
 
@@ -6,16 +8,16 @@ let Prelude = ../Deps/Prelude.dhall
 
 let Typeclasses = ../Deps/Typeclasses.dhall
 
-let Project = ../Deps/Project.dhall
+let Contract = ../Deps/Contract.dhall
 
 let Member = ./ResultColumnsMember.dhall
 
 let Templates = ../Templates/package.dhall
 
-let Input = Project.ResultRows
+let Input = Contract.ResultRows
 
 let Output =
-      { cardinality : Project.ResultRowsCardinality
+      { cardinality : Contract.ResultRowsCardinality
       , columnFieldDeclarations : Text
       , singleDecodeFields : Text
       , multipleDecodeFields : Text
@@ -23,16 +25,16 @@ let Output =
       }
 
 let run =
-      \(config : Algebra.Interpreter.Config) ->
+      \(config : ResolvedTarget.Type) ->
       \(input : Input) ->
         let compiledColumns =
               Typeclasses.Classes.Applicative.traverseList
                 Lude.Compiled.Type
                 Lude.Compiled.applicative
-                Project.Member
+                Contract.Member
                 Member.Output
                 (Member.run config)
-                (Prelude.NonEmpty.toList Project.Member input.columns)
+                (Prelude.NonEmpty.toList Contract.Member input.columns)
 
         in  Lude.Compiled.map
               (List Member.Output)
@@ -98,4 +100,4 @@ let run =
               )
               compiledColumns
 
-in  Algebra.Interpreter.module Input Output run
+in  Sdk.Sigs.Interpreter.module ResolvedTarget.Type Input Output run

@@ -1,4 +1,6 @@
-let Algebra = ../Algebras/package.dhall
+let Sdk = ../Deps/Sdk.dhall
+
+let ResolvedTarget = ../ResolvedTarget.dhall
 
 let Lude = ../Deps/Lude.dhall
 
@@ -6,7 +8,7 @@ let Prelude = ../Deps/Prelude.dhall
 
 let Typeclasses = ../Deps/Typeclasses.dhall
 
-let Project = ../Deps/Project.dhall
+let Contract = ../Deps/Contract.dhall
 
 let Templates = ../Templates/package.dhall
 
@@ -14,12 +16,12 @@ let QueryGen = ./Query.dhall
 
 let CustomTypeGen = ./CustomType.dhall
 
-let Input = Project.Project
+let Input = Contract.Project
 
 let Output = List Lude.File.Type
 
 let combineOutputs =
-      \(config : Algebra.Interpreter.Config) ->
+      \(config : ResolvedTarget.Type) ->
       \(input : Input) ->
       \(queries : List QueryGen.Output) ->
       \(customTypes : List CustomTypeGen.Output) ->
@@ -219,14 +221,14 @@ let combineOutputs =
             : List Lude.File.Type
 
 let run =
-      \(config : Algebra.Interpreter.Config) ->
+      \(config : ResolvedTarget.Type) ->
       \(input : Input) ->
         let compiledQueries
             : Lude.Compiled.Type (List (Optional QueryGen.Output))
             = Lude.Compiled.traverseList
-                Project.Query
+                Contract.Query
                 (Optional QueryGen.Output)
-                ( \(query : Project.Query) ->
+                ( \(query : Contract.Query) ->
                     Typeclasses.Classes.Alternative.optional
                       Lude.Compiled.Type
                       Lude.Compiled.alternative
@@ -246,7 +248,7 @@ let run =
         let compiledTypes
             : Lude.Compiled.Type (List CustomTypeGen.Output)
             = Lude.Compiled.traverseList
-                Project.CustomType
+                Contract.CustomType
                 CustomTypeGen.Output
                 (CustomTypeGen.run config)
                 input.customTypes
@@ -263,4 +265,4 @@ let run =
 
         in  files
 
-in  Algebra.Interpreter.module Input Output run
+in  Sdk.Sigs.Interpreter.module ResolvedTarget.Type Input Output run

@@ -1,14 +1,16 @@
-let Algebra = ../Algebras/package.dhall
+let Sdk = ../Deps/Sdk.dhall
+
+let ResolvedTarget = ../ResolvedTarget.dhall
 
 let Lude = ../Deps/Lude.dhall
 
 let Prelude = ../Deps/Prelude.dhall
 
-let Project = ../Deps/Project.dhall
+let Contract = ../Deps/Contract.dhall
 
 let Scalar = ./Scalar.dhall
 
-let Input = Project.Value
+let Input = Contract.Value
 
 let Output =
       { sig : Text
@@ -22,17 +24,17 @@ let Output =
 let Result = Lude.Compiled.Type Output
 
 let run =
-      \(config : Algebra.Interpreter.Config) ->
+      \(config : ResolvedTarget.Type) ->
       \(input : Input) ->
         Lude.Compiled.flatMap
           Scalar.Output
           Output
           ( \(scalar : Scalar.Output) ->
               Prelude.Optional.fold
-                Project.ArraySettings
+                Contract.ArraySettings
                 input.arraySettings
                 Result
-                ( \(arraySettings : Project.ArraySettings) ->
+                ( \(arraySettings : Contract.ArraySettings) ->
                     let elementSig =
                           if    arraySettings.elementIsNullable
                           then  "Option<${scalar.sig}>"
@@ -92,4 +94,4 @@ let run =
           )
           (Scalar.run config input.scalar)
 
-in  Algebra.Interpreter.module Input Output run
+in  Sdk.Sigs.Interpreter.module ResolvedTarget.Type Input Output run

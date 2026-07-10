@@ -1,16 +1,18 @@
-let Algebra = ../Algebras/package.dhall
+let Sdk = ../Deps/Sdk.dhall
+
+let ResolvedTarget = ../ResolvedTarget.dhall
 
 let Lude = ../Deps/Lude.dhall
 
 let Prelude = ../Deps/Prelude.dhall
 
-let Project = ../Deps/Project.dhall
+let Contract = ../Deps/Contract.dhall
 
 let Templates = ../Templates/package.dhall
 
 let MemberGen = ./CustomTypeMember.dhall
 
-let Input = Project.CustomType
+let Input = Contract.CustomType
 
 let Output =
       { moduleName : Text
@@ -19,10 +21,11 @@ let Output =
       , moduleContent : Text
       }
 
-in  Algebra.Interpreter.module
+in  Sdk.Sigs.Interpreter.module
+      ResolvedTarget.Type
       Input
       Output
-      ( \(config : Algebra.Interpreter.Config) ->
+      ( \(config : ResolvedTarget.Type) ->
         \(input : Input) ->
           let typeName = input.name.inPascalCase
 
@@ -32,11 +35,11 @@ in  Algebra.Interpreter.module
 
           in  merge
                 { Composite =
-                    \(members : List Project.Member) ->
+                    \(members : List Contract.Member) ->
                       let compiledMembers
                           : Lude.Compiled.Type (List MemberGen.Output)
                           = Lude.Compiled.traverseList
-                              Project.Member
+                              Contract.Member
                               MemberGen.Output
                               (MemberGen.run config)
                               members
@@ -73,7 +76,7 @@ in  Algebra.Interpreter.module
 
                       in  compiledOutput
                 , Enum =
-                    \(variants : List Project.EnumVariant) ->
+                    \(variants : List Contract.EnumVariant) ->
                       Lude.Compiled.ok
                         Output
                         { moduleName
@@ -86,9 +89,9 @@ in  Algebra.Interpreter.module
                               , pgTypeName = input.pgName
                               , variants =
                                   Prelude.List.map
-                                    Project.EnumVariant
+                                    Contract.EnumVariant
                                     Templates.CustomEnumTypeModule.Variant
-                                    ( \(variant : Project.EnumVariant) ->
+                                    ( \(variant : Contract.EnumVariant) ->
                                         { name = variant.name.inPascalCase
                                         , pgValue = variant.pgName
                                         }
@@ -97,7 +100,7 @@ in  Algebra.Interpreter.module
                               }
                         }
                 , Domain =
-                    \(value : Project.Value) ->
+                    \(value : Contract.Value) ->
                       Lude.Compiled.message
                         Output
                         "Domain types are not yet supported."

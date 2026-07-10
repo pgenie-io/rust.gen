@@ -1,10 +1,10 @@
-let Algebra = ../Algebras/package.dhall
+let Sdk = ../Deps/Sdk.dhall
 
 let Lude = ../Deps/Lude.dhall
 
 let Params = { sqlExp : Text, paramTypes : Text, paramExprs : Text }
 
-in  Algebra.Template.module
+in  Sdk.Sigs.Template.module
       Params
       ( \(params : Params) ->
           ''

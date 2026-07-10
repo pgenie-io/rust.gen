@@ -1,10 +1,12 @@
-let Algebra = ../Algebras/Interpreter.dhall
+let Sdk = ../Deps/Sdk.dhall
 
-let Project = ../Deps/Project.dhall
+let ResolvedTarget = ../ResolvedTarget.dhall
+
+let Contract = ../Deps/Contract.dhall
 
 let Lude = ../Deps/Lude.dhall
 
-let Input = Project.Name
+let Input = Contract.Name
 
 let Output = { fieldName : Text }
 
@@ -95,10 +97,10 @@ let escapeRustKeyword
     = \(text : Text) -> replaceTextIfInList rustKeywords (text ++ "_") text
 
 let run =
-      \(config : Algebra.Config) ->
+      \(config : ResolvedTarget.Type) ->
       \(input : Input) ->
         let fieldName = escapeRustKeyword input.inSnakeCase
 
         in  Lude.Compiled.ok Output { fieldName }
 
-in  Algebra.module Input Output run
+in  Sdk.Sigs.Interpreter.module ResolvedTarget.Type Input Output run

@@ -1,14 +1,16 @@
-let Algebra = ../Algebras/Interpreter.dhall
+let Sdk = ../Deps/Sdk.dhall
+
+let ResolvedTarget = ../ResolvedTarget.dhall
 
 let Lude = ../Deps/Lude.dhall
 
 let Name = ./Name.dhall
 
-let Project = ../Deps/Project.dhall
+let Contract = ../Deps/Contract.dhall
 
 let Value = ./Value.dhall
 
-let Input = Project.Member
+let Input = Contract.Member
 
 let Output =
       { fieldName : Text
@@ -22,7 +24,7 @@ let Output =
       }
 
 let run =
-      \(config : Algebra.Config) ->
+      \(config : ResolvedTarget.Type) ->
       \(input : Input) ->
         let combine =
               \(name : Name.Output) ->
@@ -67,4 +69,4 @@ let run =
                   (Value.run config input.value)
               )
 
-in  Algebra.module Input Output run
+in  Sdk.Sigs.Interpreter.module ResolvedTarget.Type Input Output run

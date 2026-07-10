@@ -1,8 +1,8 @@
-let Algebra = ../Algebras/package.dhall
+let Sdk = ../Deps/Sdk.dhall
 
 let Params = {}
 
-in  Algebra.Template.module
+in  Sdk.Sigs.Template.module
       Params
       ( \(_ : Params) ->
           ''

@@ -1,9 +1,9 @@
-let Algebra = ../Algebras/package.dhall
+let Sdk = ../Deps/Sdk.dhall
 
 let Params =
       { packageName : Text, version : Text, dbName : Text, deadpool : Bool }
 
-in  Algebra.Template.module
+in  Sdk.Sigs.Template.module
       Params
       ( \(params : Params) ->
           let deadpoolDep =

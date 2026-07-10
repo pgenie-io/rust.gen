@@ -1,12 +1,14 @@
-let Algebra = ../Algebras/package.dhall
+let Sdk = ../Deps/Sdk.dhall
+
+let ResolvedTarget = ../ResolvedTarget.dhall
 
 let Lude = ../Deps/Lude.dhall
 
-let Project = ../Deps/Project.dhall
+let Contract = ../Deps/Contract.dhall
 
 let Primitive = ./Primitive.dhall
 
-let Input = Project.Scalar
+let Input = Contract.Scalar
 
 let Output =
       { sig : Text
@@ -18,13 +20,14 @@ let Output =
       }
 
 let run =
-      \(config : Algebra.Interpreter.Config) ->
+      \(config : ResolvedTarget.Type) ->
       \(input : Input) ->
         merge
           { Primitive =
-              \(primitive : Project.Primitive) -> Primitive.run config primitive
+              \(primitive : Contract.Primitive) ->
+                Primitive.run config primitive
           , Custom =
-              \(name : Project.Name) ->
+              \(name : Contract.Name) ->
                 let pgName = name.inSnakeCase
 
                 in  Lude.Compiled.ok
@@ -39,4 +42,4 @@ let run =
           }
           input
 
-in  Algebra.Interpreter.module Input Output run
+in  Sdk.Sigs.Interpreter.module ResolvedTarget.Type Input Output run

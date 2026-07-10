@@ -1,4 +1,6 @@
-let Algebra = ../Algebras/package.dhall
+let Sdk = ../Deps/Sdk.dhall
+
+let ResolvedTarget = ../ResolvedTarget.dhall
 
 let Lude = ../Deps/Lude.dhall
 
@@ -6,7 +8,7 @@ let Prelude = ../Deps/Prelude.dhall
 
 let Typeclasses = ../Deps/Typeclasses.dhall
 
-let Project = ../Deps/Project.dhall
+let Contract = ../Deps/Contract.dhall
 
 let Templates = ../Templates/package.dhall
 
@@ -14,7 +16,7 @@ let ResultRowsModule = ./ResultRows.dhall
 
 let MemberModule = ./ParamsMember.dhall
 
-let Input = Project.Query
+let Input = Contract.Query
 
 let Output =
       { statementModuleName : Text
@@ -30,10 +32,10 @@ let ResultInterpretation =
       < Void | RowsAffected | Rows : ResultRowsModule.Output >
 
 let isMultiDimensional =
-      \(value : Project.Value) ->
+      \(value : Contract.Value) ->
         merge
           { Some =
-              \(arraySettings : Project.ArraySettings) ->
+              \(arraySettings : Contract.ArraySettings) ->
                     Natural/isZero
                       (Natural/subtract 1 arraySettings.dimensionality)
                 ==  False
@@ -45,8 +47,8 @@ let queryHasMultiDimensionalArray =
       \(input : Input) ->
         let paramsHaveMultiDimensional =
               Prelude.List.any
-                Project.Member
-                (\(member : Project.Member) -> isMultiDimensional member.value)
+                Contract.Member
+                (\(member : Contract.Member) -> isMultiDimensional member.value)
                 input.params
 
         let resultColumnsHaveMultiDimensional =
@@ -54,14 +56,14 @@ let queryHasMultiDimensionalArray =
                 { Void = False
                 , RowsAffected = False
                 , Rows =
-                    \(resultRows : Project.ResultRows) ->
+                    \(resultRows : Contract.ResultRows) ->
                       Prelude.List.any
-                        Project.Member
-                        ( \(member : Project.Member) ->
+                        Contract.Member
+                        ( \(member : Contract.Member) ->
                             isMultiDimensional member.value
                         )
                         ( Prelude.NonEmpty.toList
-                            Project.Member
+                            Contract.Member
                             resultRows.columns
                         )
                 }
@@ -83,16 +85,16 @@ let escapeRustString
         ]
 
 let renderSqlExp
-    : Project.QueryFragments -> List Text -> Text
-    = \(fragments : Project.QueryFragments) ->
+    : Contract.QueryFragments -> List Text -> Text
+    = \(fragments : Contract.QueryFragments) ->
       \(castSuffixes : List Text) ->
         "\"${Prelude.Text.concatMap
-               Project.QueryFragment
-               ( \(queryFragment : Project.QueryFragment) ->
+               Contract.QueryFragment
+               ( \(queryFragment : Contract.QueryFragment) ->
                    merge
                      { Sql = escapeRustString
                      , Var =
-                         \(var : Project.Var) ->
+                         \(var : Contract.Var) ->
                            let suffix =
                                  Prelude.Optional.fold
                                    Text
@@ -112,19 +114,19 @@ let renderSqlExp
                fragments}\""
 
 let renderDocComment
-    : Project.QueryFragments -> Text
+    : Contract.QueryFragments -> Text
     = Prelude.Text.concatMap
-        Project.QueryFragment
-        ( \(queryFragment : Project.QueryFragment) ->
+        Contract.QueryFragment
+        ( \(queryFragment : Contract.QueryFragment) ->
             merge
               { Sql = Prelude.Function.identity Text
-              , Var = \(var : Project.Var) -> "\$${var.rawName}"
+              , Var = \(var : Contract.Var) -> "\$${var.rawName}"
               }
               queryFragment
         )
 
 let render =
-      \(config : Algebra.Interpreter.Config) ->
+      \(config : ResolvedTarget.Type) ->
       \(input : Input) ->
       \(resultInterpretation : ResultInterpretation) ->
       \(params : List MemberModule.Output) ->
@@ -312,7 +314,7 @@ let render =
             }
 
 let run =
-      \(config : Algebra.Interpreter.Config) ->
+      \(config : ResolvedTarget.Type) ->
       \(input : Input) ->
         if    queryHasMultiDimensionalArray input
         then  Lude.Compiled.report
@@ -342,7 +344,7 @@ let run =
                                   ResultInterpretation
                                   ResultInterpretation.RowsAffected
                             , Rows =
-                                \(resultRowsInput : Project.ResultRows) ->
+                                \(resultRowsInput : Contract.ResultRows) ->
                                   Lude.Compiled.map
                                     ResultRowsModule.Output
                                     ResultInterpretation
@@ -363,7 +365,7 @@ let run =
                         ( Typeclasses.Classes.Applicative.traverseList
                             Lude.Compiled.Type
                             Lude.Compiled.applicative
-                            Project.Member
+                            Contract.Member
                             MemberModule.Output
                             (MemberModule.run config)
                             input.params
@@ -371,4 +373,4 @@ let run =
                     )
                 )
 
-in  Algebra.Interpreter.module Input Output run
+in  Sdk.Sigs.Interpreter.module ResolvedTarget.Type Input Output run

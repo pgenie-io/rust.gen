@@ -1,4 +1,4 @@
-let Algebra = ../Algebras/package.dhall
+let Sdk = ../Deps/Sdk.dhall
 
 let Params =
       { fieldName : Text
@@ -7,7 +7,7 @@ let Params =
       , rowIndexExpr : Text
       }
 
-in  Algebra.Template.module
+in  Sdk.Sigs.Template.module
       Params
       ( \(params : Params) ->
           "${params.fieldName}: crate::mapping::decode_cell(${params.rowVar}, ${params.rowIndexExpr}, ${Natural/show

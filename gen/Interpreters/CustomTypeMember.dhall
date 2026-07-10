@@ -1,4 +1,6 @@
-let Algebra = ../Algebras/package.dhall
+let Sdk = ../Deps/Sdk.dhall
+
+let ResolvedTarget = ../ResolvedTarget.dhall
 
 let Lude = ../Deps/Lude.dhall
 
@@ -9,7 +11,7 @@ let Input = Member.Input
 let Output = { fieldName : Text, fieldType : Text, pgName : Text }
 
 let run =
-      \(config : Algebra.Interpreter.Config) ->
+      \(config : ResolvedTarget.Type) ->
       \(input : Input) ->
         Lude.Compiled.map
           Member.Output
@@ -22,4 +24,4 @@ let run =
           )
           (Member.run config input)
 
-in  Algebra.Interpreter.module Input Output run
+in  Sdk.Sigs.Interpreter.module ResolvedTarget.Type Input Output run

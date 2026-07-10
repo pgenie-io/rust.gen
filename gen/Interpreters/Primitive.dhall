@@ -1,10 +1,12 @@
-let Algebra = ../Algebras/Interpreter.dhall
+let Sdk = ../Deps/Sdk.dhall
+
+let ResolvedTarget = ../ResolvedTarget.dhall
 
 let Lude = ../Deps/Lude.dhall
 
-let Project = ../Deps/Project.dhall
+let Contract = ../Deps/Contract.dhall
 
-let Input = Project.Primitive
+let Input = Contract.Primitive
 
 let Output =
       { sig : Text
@@ -47,7 +49,7 @@ let inferred =
           }
 
 let run =
-      \(config : Algebra.Config) ->
+      \(config : ResolvedTarget.Type) ->
       \(input : Input) ->
         merge
           { Bit =
@@ -201,4 +203,4 @@ let run =
           }
           input
 
-in  Algebra.module Input Output run
+in  Sdk.Sigs.Interpreter.module ResolvedTarget.Type Input Output run

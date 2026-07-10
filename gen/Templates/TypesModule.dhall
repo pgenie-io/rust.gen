@@ -1,8 +1,8 @@
-let Algebra = ../Algebras/package.dhall
+let Sdk = ../Deps/Sdk.dhall
 
 let Params = { typeModNames : Text, typeReexports : Text }
 
-in  Algebra.Template.module
+in  Sdk.Sigs.Template.module
       Params
       ( \(params : Params) ->
           ''
