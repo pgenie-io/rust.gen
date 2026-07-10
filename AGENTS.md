@@ -16,20 +16,19 @@ Domain Model  →  Interpreters  →  Presentation Model  →  Templates  →  S
 
 - **Interpreters** perform semantic analysis, type mapping, name transformations, and decision-making. They digest the raw domain model and produce a **Presentation Model** — a data structure tailored specifically for rendering.
 - **Templates** receive the Presentation Model and emit source text. They contain layout, syntax, and formatting rules for the target language.
-- **Algebras** define the abstract contracts (`Interpreter` and `Template`) that enforce this boundary.
+- **Sigs** (`Sdk.Sigs`) define the record shapes (`Interpreter`, `Template`, and `Generator`) that enforce this boundary.
 
 This mirrors:
 - **Presentation Model / View Model** (Fowler): a self-contained model shaped by the needs of the view.
 - **Transform View** (Fowler): data is transformed *before* reaching the template; the template does not query the domain.
 - **Intermediate Representation** (compiler architecture): Interpreters lower the domain AST into a target-language-specific IR.
-- **Tagless Final** (FP): Algebras define interfaces; concrete files provide interpretations.
+- **Tagless Final** (FP): Sigs define interfaces; concrete files provide interpretations.
 
 ## Directory Layout Convention
 
 ```
 src/
-  package.dhall           -- Entry point: Config, defaultConfig, Sdk.Sigs.generator
-  InterpreterConfig.dhall -- Internal config resolved from the public Config + Project
+  package.dhall           -- Entry point: Config, defaultConfig, Sdk.Sigs.generator Config defaultConfig ProjectInterpreter.run
   Interpreters/           -- Semantic layer: "what to generate"; each module ends with
                            -- Sdk.Sigs.interpreter Config Input Output run
     Project.dhall
@@ -142,6 +141,7 @@ Because layers communicate only through pure data structures, they can be tested
 - **Interpreter unit tests**: Given a domain value, assert the exact shape of the produced Presentation Model.
 - **Template unit tests**: Given a hardcoded `Params` record, assert the emitted text matches expected output.
 - **Integration tests**: Wire a full domain model through `compile` and assert the resulting file tree.
+- **Local demo verification**: `build.bash` type-checks `src/package.dhall`, materialises `demos/Exhaustive.dhall` into `demo-verify/`, and runs `cargo test`. CI performs the same generation and verification steps; `build.bash` is kept as a local convenience.
 
 ## Anti-patterns
 
@@ -161,7 +161,7 @@ To create a generator for a different target language:
 1. **Keep the domain model** (`Project`) unchanged — it is language-agnostic.
 2. **Rewrite leaf Interpreters** (`Scalar`, `Primitive`, `Value`) to map domain concepts to the new language's type system.
 3. **Rewrite Templates** to emit the new language's syntax.
-4. **Keep the architecture**: Algebras, `Compiled` effect system, hierarchical Interpreter composition, and narrow Template interfaces remain identical.
+4. **Keep the architecture**: Sigs, `Compiled` effect system, hierarchical Interpreter composition, and narrow Template interfaces remain identical.
 
 
 ## Design rules
