@@ -204,5 +204,5 @@ The generator is written in [Dhall](https://dhall-lang.org/). Install dhall by f
 To check the generator against the demo fixture:
 
 ```bash
-dhall --file tests/Demo.dhall
+dhall --file demos/Exhaustive.dhall
 ```

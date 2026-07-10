@@ -27,33 +27,33 @@ This mirrors:
 ## Directory Layout Convention
 
 ```
-gen/
-  Algebras/
-    Interpreter.dhall    -- Contract: Config -> Input -> Compiled Output
-    Template.dhall       -- Contract: Params -> Text
-    package.dhall
-  Interpreters/          -- Semantic layer: "what to generate"
+src/
+  package.dhall           -- Entry point: Config, defaultConfig, Sdk.Sigs.generator
+  InterpreterConfig.dhall -- Internal config resolved from the public Config + Project
+  Interpreters/           -- Semantic layer: "what to generate"; each module ends with
+                           -- Sdk.Sigs.interpreter Config Input Output run
     Project.dhall
     Query.dhall
     Value.dhall
     Scalar.dhall
     ...
-  Templates/             -- Syntactic layer: "how it looks"
+  Templates/              -- Syntactic layer: "how it looks"; each module ends with
+                           -- Sdk.Sigs.template Params run
     Module.dhall
     TypesModule.dhall
     ...
-  Deps/
-    Lude.dhall           -- Standard library: Compiled monad, name utils, file types
-    Project.dhall        -- Domain model schema (pgenie SDK)
-    Typeclasses.dhall    -- Applicative/Alternative/Traverse for Compiled
-  Config.dhall           -- Generator-specific configuration schema
-  compile.dhall          -- Entry point: wires interpreters together
-  Gen.dhall              -- Public API
+  Deps/                   -- Pinned remote imports only, one file per dependency
+    Sdk.dhall             -- gen-sdk: Sigs, Fixtures, Output.toFileMap
+    Contract.dhall        -- gen-contract: Project model + Output/Report/File types
+    Lude.dhall            -- lude.dhall: Compiled monad, name utils, file types
+    Prelude.dhall         -- Dhall Prelude
+    Typeclasses.dhall     -- Applicative/Alternative/Traverse for Compiled
+demos/                    -- Executable fixture drivers, e.g. Exhaustive.dhall
 ```
 
 ## Interpreter Naming Constraint
 
-Interpreter modules in `gen/Interpreters/` must be named after the domain model type they consume.
+Interpreter modules in `src/Interpreters/` must be named after the domain model type they consume.
 
 - The **canonical interpreter** for a type uses the exact type name: `Query.dhall` for `Project.Query`, `Member.dhall` for `Project.Member`, `Name.dhall` for `Project.Name`.
 - When multiple interpreters consume the same type for different contexts, the name may be **context-qualified**: e.g., `ParamsMember.dhall` for a `Project.Member` interpreter that projects only parameter-related fields.
@@ -166,8 +166,8 @@ To create a generator for a different target language:
 
 ## Design rules
 
-- `gen/Templates/` must not depend on `gen/Interpreters/` or the Project model from `Deps.Sdk`.
-- Textual templates should be extracted into `gen/Templates/` as much as possible. `gen/Interpreters/` should primarily be responsible for interpreting the Project model and orchestrating the generation process.
+- `src/Templates/` must not depend on `src/Interpreters/` or the Project model from `Deps.Sdk`.
+- Textual templates should be extracted into `src/Templates/` as much as possible. `src/Interpreters/` should primarily be responsible for interpreting the Project model and orchestrating the generation process.
 - Templates may depend on other templates and their parameter structures may contain parameter structures of other templates. This may be especially useful for lists and optionals.
   - However a final design decision has not been made on this and it may be simpler to just have the templates be simple and independent, with the interpreters responsible for composing them together as needed by calling them and thus interpreting into structures over chunks of text.
     - Pick either approach, just be consistent within the boundaries of a module.
