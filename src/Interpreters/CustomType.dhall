@@ -1,6 +1,6 @@
 let Sdk = ../Deps/Sdk.dhall
 
-let InterpreterConfig = ../InterpreterConfig.dhall
+let Config = { deadpool : Bool }
 
 let Lude = ../Deps/Lude.dhall
 
@@ -22,10 +22,10 @@ let Output =
       }
 
 in  Sdk.Sigs.interpreter
-      InterpreterConfig.Type
+      Config
       Input
       Output
-      ( \(config : InterpreterConfig.Type) ->
+      ( \(config : Config) ->
         \(input : Input) ->
           let typeName = input.name.inPascalCase
 

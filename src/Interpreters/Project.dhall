@@ -1,6 +1,6 @@
 let Sdk = ../Deps/Sdk.dhall
 
-let InterpreterConfig = ../InterpreterConfig.dhall
+let Config = { deadpool : Bool }
 
 let Lude = ../Deps/Lude.dhall
 
@@ -21,7 +21,7 @@ let Input = Contract.Project
 let Output = List Lude.File.Type
 
 let combineOutputs =
-      \(config : InterpreterConfig.Type) ->
+      \(config : Config) ->
       \(input : Input) ->
       \(queries : List QueryGen.Output) ->
       \(customTypes : List CustomTypeGen.Output) ->
@@ -92,7 +92,8 @@ let combineOutputs =
             : Lude.File.Type
             = { path = "src/lib.rs"
               , content =
-                  Templates.LibRs.run { rootModuleName = config.rootModuleName }
+                  Templates.LibRs.run
+                    { rootModuleName = input.name.inSnakeCase }
               }
 
         let packageName = "${input.space.inKebabCase}-${input.name.inKebabCase}"
@@ -221,7 +222,7 @@ let combineOutputs =
             : List Lude.File.Type
 
 let run =
-      \(config : InterpreterConfig.Type) ->
+      \(config : Config) ->
       \(input : Input) ->
         let compiledQueries
             : Lude.Compiled.Type (List (Optional QueryGen.Output))
@@ -265,4 +266,4 @@ let run =
 
         in  files
 
-in  Sdk.Sigs.interpreter InterpreterConfig.Type Input Output run
+in  Sdk.Sigs.interpreter Config Input Output run

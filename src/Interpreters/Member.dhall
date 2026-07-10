@@ -1,6 +1,6 @@
 let Sdk = ../Deps/Sdk.dhall
 
-let InterpreterConfig = ../InterpreterConfig.dhall
+let Config = { deadpool : Bool }
 
 let Lude = ../Deps/Lude.dhall
 
@@ -24,7 +24,7 @@ let Output =
       }
 
 let run =
-      \(config : InterpreterConfig.Type) ->
+      \(config : Config) ->
       \(input : Input) ->
         let combine =
               \(name : Name.Output) ->
@@ -69,4 +69,4 @@ let run =
                   (Value.run config input.value)
               )
 
-in  Sdk.Sigs.interpreter InterpreterConfig.Type Input Output run
+in  Sdk.Sigs.interpreter Config Input Output run

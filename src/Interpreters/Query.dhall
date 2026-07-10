@@ -1,6 +1,6 @@
 let Sdk = ../Deps/Sdk.dhall
 
-let InterpreterConfig = ../InterpreterConfig.dhall
+let Config = { deadpool : Bool }
 
 let Lude = ../Deps/Lude.dhall
 
@@ -126,7 +126,7 @@ let renderDocComment
         )
 
 let render =
-      \(config : InterpreterConfig.Type) ->
+      \(config : Config) ->
       \(input : Input) ->
       \(resultInterpretation : ResultInterpretation) ->
       \(params : List MemberModule.Output) ->
@@ -314,7 +314,7 @@ let render =
             }
 
 let run =
-      \(config : InterpreterConfig.Type) ->
+      \(config : Config) ->
       \(input : Input) ->
         if    queryHasMultiDimensionalArray input
         then  Lude.Compiled.report
@@ -373,4 +373,4 @@ let run =
                     )
                 )
 
-in  Sdk.Sigs.interpreter InterpreterConfig.Type Input Output run
+in  Sdk.Sigs.interpreter Config Input Output run

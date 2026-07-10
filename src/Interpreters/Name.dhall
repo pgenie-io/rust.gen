@@ -1,6 +1,6 @@
 let Sdk = ../Deps/Sdk.dhall
 
-let InterpreterConfig = ../InterpreterConfig.dhall
+let Config = { deadpool : Bool }
 
 let Contract = ../Deps/Contract.dhall
 
@@ -97,10 +97,10 @@ let escapeRustKeyword
     = \(text : Text) -> replaceTextIfInList rustKeywords (text ++ "_") text
 
 let run =
-      \(config : InterpreterConfig.Type) ->
+      \(config : Config) ->
       \(input : Input) ->
         let fieldName = escapeRustKeyword input.inSnakeCase
 
         in  Lude.Compiled.ok Output { fieldName }
 
-in  Sdk.Sigs.interpreter InterpreterConfig.Type Input Output run
+in  Sdk.Sigs.interpreter Config Input Output run
