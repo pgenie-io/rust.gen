@@ -2,6 +2,8 @@
 
 ## Non-breaking
 
+- Renamed `demos/` to `fixtures/` and `demo-verify/` to `generated-output/`, aligning the fixture-driver directory name with the `Sdk.Fixtures` module it exercises.
+
 - Bumped `gen-sdk` to v2.0.0, following the `Sdk.Sigs` restructuring: `Sigs.Interpreter.module`/`Sigs.Template.module` became lowercase `Sigs.interpreter`/`Sigs.template` (called directly as functions, no `.module` field), and the top-level entry point now builds its `Generator` via the new `Sdk.Sigs.generator Config defaultConfig interpret` in place of the removed `Contract.module`. No change to generated output.
 
 - Restructured the repository layout to align with the pGenie generator architecture:

@@ -47,7 +47,7 @@ src/
     Lude.dhall            -- lude.dhall: Compiled monad, name utils, file types
     Prelude.dhall         -- Dhall Prelude
     Typeclasses.dhall     -- Applicative/Alternative/Traverse for Compiled
-demos/                    -- Executable fixture drivers, e.g. Exhaustive.dhall
+fixtures/                    -- Executable fixture drivers, e.g. Exhaustive.dhall
 ```
 
 ## Interpreter Naming Constraint
@@ -141,7 +141,7 @@ Because layers communicate only through pure data structures, they can be tested
 - **Interpreter unit tests**: Given a domain value, assert the exact shape of the produced Presentation Model.
 - **Template unit tests**: Given a hardcoded `Params` record, assert the emitted text matches expected output.
 - **Integration tests**: Wire a full domain model through `compile` and assert the resulting file tree.
-- **Local demo verification**: `build.bash` type-checks `src/package.dhall`, materialises `demos/Exhaustive.dhall` into `demo-verify/`, and runs `cargo test`. CI performs the same generation and verification steps; `build.bash` is kept as a local convenience.
+- **Local demo verification**: `build.bash` type-checks `src/package.dhall`, materialises `fixtures/Exhaustive.dhall` into `generated-output/`, and runs `cargo test`. CI performs the same generation and verification steps; `build.bash` is kept as a local convenience.
 
 ## Anti-patterns
 

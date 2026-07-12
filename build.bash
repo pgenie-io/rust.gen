@@ -6,7 +6,7 @@
 # generated crate's tests on every push. This script reproduces those steps for
 # local development convenience.
 
-DEMO_OUTPUT_DIR="demo-verify"
+DEMO_OUTPUT_DIR="generated-output"
 
 echo "Type-checking src/package.dhall"
 dhall type --file src/package.dhall >/dev/null
@@ -15,7 +15,7 @@ echo "Regenerating demo output into ${DEMO_OUTPUT_DIR}"
 rm -rf "${DEMO_OUTPUT_DIR}"
 dhall to-directory-tree \
   --allow-path-separators \
-  --file demos/Exhaustive.dhall \
+  --file fixtures/Exhaustive.dhall \
   --output "${DEMO_OUTPUT_DIR}"
 
 echo "Running generated crate tests"
