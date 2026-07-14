@@ -1,25 +1,13 @@
 # Upcoming
 
-## Breaking
-
-- Bumped `gen-contract` to v5.0.0 and `gen-sdk` to v3.0.0.
-- Fixed: `Scalar.Custom` references to a custom type now use that type's authentic `pgSchema`/`pgName` (from the resolvable `CustomTypeRef`) for the generated Postgres cast suffix, instead of fabricating `::public.<name.inSnakeCase>` — which was structurally wrong for any custom type outside the `public` schema, or whose Postgres name differs from the identifier's own snake_case rendering.
-- Behavior change: a custom type this generator can't render (currently: `Domain`), or any custom type/query that transitively depends on one, is now skipped with a warning instead of hard-failing the entire project compile.
-
 ## Non-breaking
 
-- Renamed `demos/` to `fixtures/` and `demo-verify/` to `generated-output/`, aligning the fixture-driver directory name with the `Sdk.Fixtures` module it exercises.
+- Bumped `gen-contract` to v5.0.0 and `gen-sdk` to v3.0.0.
+- Behavior change: a custom type this generator can't render (currently: `Domain`), or any custom type/query that transitively depends on one, is now skipped with a warning instead of hard-failing the entire project compile.
 
-- Bumped `gen-sdk` to v2.0.0, following the `Sdk.Sigs` restructuring: `Sigs.Interpreter.module`/`Sigs.Template.module` became lowercase `Sigs.interpreter`/`Sigs.template` (called directly as functions, no `.module` field), and the top-level entry point now builds its `Generator` via the new `Sdk.Sigs.generator Config defaultConfig interpret` in place of the removed `Contract.module`. No change to generated output.
+## Fixes
 
-- Restructured the repository layout to align with the pGenie generator architecture:
-  - Generator implementation moved from `gen/` to `src/`.
-  - Public entry point renamed from `gen/Gen.dhall` to `src/package.dhall`.
-  - Internal `ResolvedTarget.dhall` renamed back to `InterpreterConfig.dhall`.
-  - Fixture drivers moved from `tests/` to `demos/`; the materialised demo output is no longer committed.
-  - Dropped the now-redundant `gen/Config.dhall` and `gen/compile.dhall` in favor of defining `Config`/`defaultConfig` directly in `src/package.dhall`.
-
-- CI's `discover-tests` job is now `discover-demos`, matrixing over `demos/*.dhall` instead of `tests/*`, matching the `dhall-directory-tree.github-action@v2`-based generate-then-`cargo test` verification already in place.
+- `Scalar.Custom` references to a custom type now use that type's authentic `pgSchema`/`pgName` (from the resolvable `CustomTypeRef`) for the generated Postgres cast suffix, instead of fabricating `::public.<name.inSnakeCase>` — which was structurally wrong for any custom type outside the `public` schema, or whose Postgres name differs from the identifier's own snake_case rendering.
 
 # v1.0.0
 
