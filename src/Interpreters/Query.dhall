@@ -33,15 +33,7 @@ let ResultInterpretation =
 
 let isMultiDimensional =
       \(value : Contract.Value) ->
-        merge
-          { Some =
-              \(arraySettings : Contract.ArraySettings) ->
-                    Natural/isZero
-                      (Natural/subtract 1 arraySettings.dimensionality)
-                ==  False
-          , None = False
-          }
-          value.arraySettings
+    Natural/isZero (Natural/subtract 1 value.dimensionality) == False
 
 let queryHasMultiDimensionalArray =
       \(input : Input) ->

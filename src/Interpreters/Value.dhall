@@ -21,8 +21,6 @@ let Output =
       , testValueExpr : Text
       }
 
-let Result = Lude.Compiled.Type Output
-
 let run =
       \(config : Config) ->
       \(input : Input) ->
@@ -30,67 +28,58 @@ let run =
           Scalar.Output
           Output
           ( \(scalar : Scalar.Output) ->
-              Prelude.Optional.fold
-                Contract.ArraySettings
-                input.arraySettings
-                Result
-                ( \(arraySettings : Contract.ArraySettings) ->
-                    let elementSig =
-                          if    arraySettings.elementIsNullable
-                          then  "Option<${scalar.sig}>"
-                          else  scalar.sig
+              let elementSig =
+                    if    input.elementIsNullable
+                    then  "Option<${scalar.sig}>"
+                    else  scalar.sig
 
-                    let arraySig =
-                          Natural/fold
-                            arraySettings.dimensionality
-                            Text
-                            (\(inner : Text) -> "Vec<${inner}>")
-                            elementSig
+              let sig =
+                    Natural/fold
+                      input.dimensionality
+                      Text
+                      (\(inner : Text) -> "Vec<${inner}>")
+                      elementSig
 
-                    let arrayPgType =
-                          if    scalar.hasKnownPgType
+              let pgType =
+                    if    Natural/isZero input.dimensionality
+                    then  scalar.pgType
+                    else  if    scalar.hasKnownPgType
                           then  "${scalar.pgType}_ARRAY"
                           else  scalar.pgType
 
-                    let arrayPgCastSuffix =
-                          if    scalar.hasKnownPgType
-                          then  ""
-                          else  "${scalar.pgCastSuffix}${Prelude.Text.replicate
-                                                           arraySettings.dimensionality
-                                                           "[]"}"
+              let pgCastSuffix =
+                    if    scalar.hasKnownPgType
+                    then  ""
+                    else  "${scalar.pgCastSuffix}${Prelude.Text.replicate
+                                                     input.dimensionality
+                                                     "[]"}"
 
-                    let elementTestValue =
-                          if    arraySettings.elementIsNullable
-                          then  "Some(${scalar.testValueExpr})"
-                          else  scalar.testValueExpr
+              let supportsDefault =
+                    if    Natural/isZero input.dimensionality
+                    then  scalar.supportsDefault
+                    else  True
 
-                    let arrayTestValue =
-                          Natural/fold
-                            arraySettings.dimensionality
-                            Text
-                            (\(inner : Text) -> "vec![${inner}]")
-                            elementTestValue
+              let elementTestValue =
+                    if    input.elementIsNullable
+                    then  "Some(${scalar.testValueExpr})"
+                    else  scalar.testValueExpr
 
-                    in  Lude.Compiled.ok
-                          Output
-                          { sig = arraySig
-                          , pgType = arrayPgType
-                          , pgCastSuffix = arrayPgCastSuffix
-                          , hasKnownPgType = scalar.hasKnownPgType
-                          , supportsDefault = True
-                          , testValueExpr = arrayTestValue
-                          }
-                )
-                ( Lude.Compiled.ok
+              let testValueExpr =
+                    Natural/fold
+                      input.dimensionality
+                      Text
+                      (\(inner : Text) -> "vec![${inner}]")
+                      elementTestValue
+
+              in  Lude.Compiled.ok
                     Output
-                    { sig = scalar.sig
-                    , pgType = scalar.pgType
-                    , pgCastSuffix = scalar.pgCastSuffix
+                    { sig
+                    , pgType
+                    , pgCastSuffix
                     , hasKnownPgType = scalar.hasKnownPgType
-                    , supportsDefault = scalar.supportsDefault
-                    , testValueExpr = scalar.testValueExpr
+                    , supportsDefault
+                    , testValueExpr
                     }
-                )
           )
           (Scalar.run config input.scalar)
 
