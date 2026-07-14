@@ -1,5 +1,11 @@
 # Upcoming
 
+## Breaking
+
+- Bumped `gen-contract` to v5.0.0 and `gen-sdk` to v3.0.0.
+- Fixed: `Scalar.Custom` references to a custom type now use that type's authentic `pgSchema`/`pgName` (from the resolvable `CustomTypeRef`) for the generated Postgres cast suffix, instead of fabricating `::public.<name.inSnakeCase>` — which was structurally wrong for any custom type outside the `public` schema, or whose Postgres name differs from the identifier's own snake_case rendering.
+- Behavior change: a custom type this generator can't render (currently: `Domain`), or any custom type/query that transitively depends on one, is now skipped with a warning instead of hard-failing the entire project compile.
+
 ## Non-breaking
 
 - Renamed `demos/` to `fixtures/` and `demo-verify/` to `generated-output/`, aligning the fixture-driver directory name with the `Sdk.Fixtures` module it exercises.
