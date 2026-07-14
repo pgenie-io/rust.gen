@@ -27,18 +27,16 @@ let run =
               \(primitive : Contract.Primitive) ->
                 Primitive.run config primitive
           , Custom =
-              \(name : Contract.Name) ->
-                let pgName = name.inSnakeCase
-
-                in  Lude.Compiled.ok
-                      Output
-                      { sig = "crate::types::${name.inPascalCase}"
-                      , pgType = "Type::UNKNOWN"
-                      , pgCastSuffix = "::public.${pgName}"
-                      , hasKnownPgType = False
-                      , supportsDefault = False
-                      , testValueExpr = "Default::default()"
-                      }
+              \(ref : Contract.CustomTypeRef) ->
+                Lude.Compiled.ok
+                  Output
+                  { sig = "crate::types::${ref.name.inPascalCase}"
+                  , pgType = "Type::UNKNOWN"
+                  , pgCastSuffix = "::${ref.pgSchema}.${ref.pgName}"
+                  , hasKnownPgType = False
+                  , supportsDefault = False
+                  , testValueExpr = "Default::default()"
+                  }
           }
           input
 
