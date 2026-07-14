@@ -16,9 +16,20 @@ let QueryGen = ./Query.dhall
 
 let CustomTypeGen = ./CustomType.dhall
 
+let CustomTypes = Sdk.CustomTypes
+
 let Input = Contract.Project
 
 let Output = List Lude.File.Type
+
+let customTypeKindIsSupported =
+      \(definition : Contract.CustomTypeDefinition) ->
+        merge
+          { Composite = \(_ : List Contract.Member) -> True
+          , Enum = \(_ : List Contract.EnumVariant) -> True
+          , Domain = \(_ : Contract.Value) -> False
+          }
+          definition
 
 let combineOutputs =
       \(config : Config) ->
@@ -224,17 +235,29 @@ let combineOutputs =
 let run =
       \(config : Config) ->
       \(input : Input) ->
+        let supportedFlags : List Bool =
+              CustomTypes.supportedCustomTypes customTypeKindIsSupported input.customTypes
+
         let compiledQueries
             : Lude.Compiled.Type (List (Optional QueryGen.Output))
             = Lude.Compiled.traverseList
                 Contract.Query
                 (Optional QueryGen.Output)
                 ( \(query : Contract.Query) ->
-                    Typeclasses.Classes.Alternative.optional
-                      Lude.Compiled.Type
-                      Lude.Compiled.alternative
-                      QueryGen.Output
-                      (QueryGen.run config query)
+                    let compiled
+                        : Lude.Compiled.Type QueryGen.Output
+                        = if    CustomTypes.queryIsSupported supportedFlags query
+                          then  QueryGen.run config query
+                          else  Lude.Compiled.report
+                                  QueryGen.Output
+                                  [ query.srcPath ]
+                                  "Query references an unsupported custom type; skipping."
+
+                    in  Typeclasses.Classes.Alternative.optional
+                          Lude.Compiled.Type
+                          Lude.Compiled.alternative
+                          QueryGen.Output
+                          compiled
                 )
                 input.queries
 
@@ -246,13 +269,46 @@ let run =
                 (Prelude.List.unpackOptionals QueryGen.Output)
                 compiledQueries
 
+        let indexedCustomTypes = Prelude.List.indexed Contract.CustomType input.customTypes
+
+        let compiledTypes
+            : Lude.Compiled.Type (List (Optional CustomTypeGen.Output))
+            = Lude.Compiled.traverseList
+                { index : Natural, value : Contract.CustomType }
+                (Optional CustomTypeGen.Output)
+                ( \(ic : { index : Natural, value : Contract.CustomType }) ->
+                    let isSupported =
+                          Prelude.Optional.fold
+                            Bool
+                            (Prelude.List.index ic.index Bool supportedFlags)
+                            Bool
+                            (\(b : Bool) -> b)
+                            False
+
+                    let compiled
+                        : Lude.Compiled.Type CustomTypeGen.Output
+                        = if    isSupported
+                          then  CustomTypeGen.run config ic.value
+                          else  Lude.Compiled.report
+                                  CustomTypeGen.Output
+                                  [ "${ic.value.pgSchema}.${ic.value.pgName}" ]
+                                  "Unsupported custom type (a Domain, or transitively depends on one); skipping."
+
+                    in  Typeclasses.Classes.Alternative.optional
+                          Lude.Compiled.Type
+                          Lude.Compiled.alternative
+                          CustomTypeGen.Output
+                          compiled
+                )
+                indexedCustomTypes
+
         let compiledTypes
             : Lude.Compiled.Type (List CustomTypeGen.Output)
-            = Lude.Compiled.traverseList
-                Contract.CustomType
-                CustomTypeGen.Output
-                (CustomTypeGen.run config)
-                input.customTypes
+            = Lude.Compiled.map
+                (List (Optional CustomTypeGen.Output))
+                (List CustomTypeGen.Output)
+                (Prelude.List.unpackOptionals CustomTypeGen.Output)
+                compiledTypes
 
         let files
             : Lude.Compiled.Type (List Lude.File.Type)
