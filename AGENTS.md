@@ -50,6 +50,8 @@ src/
 fixtures/                    -- Executable fixture drivers, e.g. Exhaustive.dhall
 ```
 
+`Deps/*.dhall` must contain only pinned remote imports (`https://raw.githubusercontent.com/pgenie-io/<repo>/<tag>/...` with a `sha256`). Never point one at a sibling repo via a local filesystem path (`../gen-contract/...`, `../gen-sdk/...`) — it only resolves on a machine with those repos checked out side by side and breaks CI.
+
 ## Interpreter Naming Constraint
 
 Interpreter modules in `src/Interpreters/` must be named after the domain model type they consume.
